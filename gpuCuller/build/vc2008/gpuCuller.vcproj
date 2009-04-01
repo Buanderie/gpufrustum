@@ -33,7 +33,7 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
+				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -112,7 +112,7 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
+				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -127,7 +127,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;BUILD_DLL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cuda.lib cudart.lib cutil32D.lib"
+				AdditionalDependencies="cuda.lib cudart.lib cutil32.lib"
 				OutputFile="../../lib/$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);../../../cutil/lib"
@@ -186,13 +186,6 @@
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
-				>
-				<Tool
-					Name="CUDA Build Rule"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
 				>
 				<Tool
 					Name="CUDA Build Rule"

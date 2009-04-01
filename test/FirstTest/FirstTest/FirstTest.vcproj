@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\gpuCuller\inc"
+				AdditionalIncludeDirectories="..\..\..\gpuCuller\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -89,7 +89,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy ..\..\..\cutil\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\"
+				CommandLine="copy ..\..\..\cutil\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\gpuCuller\inc"
+				AdditionalIncludeDirectories="..\..\..\gpuCuller\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -167,7 +167,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy ..\..\..\cutil\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\"
+				CommandLine="copy ..\..\..\cutil\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
