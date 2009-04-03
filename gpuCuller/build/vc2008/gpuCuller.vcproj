@@ -182,15 +182,16 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\frustumculling_kernel.cu"
+			>
+		</File>
+		<File
+			RelativePath=".\structs.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\src\template.cu"
 			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="CUDA Build Rule"
-				/>
-			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="..\..\src\template_gold.cpp"
