@@ -1,5 +1,5 @@
-#ifndef __FRUSTUM_CULLING_KERNEL_H__
-#define __FRUSTUM_CULLING_KERNEL_H__
+#ifndef __FRUSTUM_CULLING_KERNEL_CU__
+#define __FRUSTUM_CULLING_KERNEL_CU__
 
 #include "structs.h"
 
@@ -26,9 +26,16 @@ classifiyPlanePoint( plane_t* iplanes, point3d_t* ipoints, int nPoint, int nPlan
 	if( x >= nPoint || y >= nPlane )
 		return;
 
-	//Transfert Device Memory -> Shared Memory ? A voir...
+	/*
+	//Transfert Global Memory -> Shared Memory
+	// Shared memory pour les plans
+	__shared__ float splanes[blockDim.y];
+	// Shared memory pour les points
+	__shared__ float spoints[blockDim.x];
+	// Shared memory pour la sortie
+	__shared__ float sout[BLOCK_SIZE][BLOCK_SIZE];
+	*/
 
-	//
 	float p = iplanes[y].a*ipoints[x].x + iplanes[y].b*ipoints[x].y + iplanes[y].c*ipoints[x].z + iplanes[y].d;
 
 	//FRONT
@@ -50,4 +57,16 @@ classifiyPlanePoint( plane_t* iplanes, point3d_t* ipoints, int nPoint, int nPlan
 	return;
 }
 
+
+//Classification Frustum Pyramidal / AABB
+/*
+Ce test se fait en deux passes:
+	-Passe 1: Reduction de la matrice resultat de classifyPlanePoint sur l'axe X. On somme les resultats, de maniere a obtenir le nombre de points de chaque cote des plans
+	-Passe 2: Test sur le nombre de points de chaque cote des plans, et obtention du resultat
+*/
+__global__ void 
+intersectPyrFrustumAABB_pass1( )
+{
+ 
+}
 #endif
