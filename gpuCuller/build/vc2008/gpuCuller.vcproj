@@ -186,7 +186,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\structs.h"
+			RelativePath="..\..\include\structs.h"
 			>
 		</File>
 		<File
