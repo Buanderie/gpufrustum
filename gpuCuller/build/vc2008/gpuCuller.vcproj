@@ -33,7 +33,7 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
+				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
 				PreprocessorDefinitions="WIN32;_WINDOWS;DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -112,7 +112,7 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
-				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
+				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -127,8 +127,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;BUILD_DLL"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
+				PreprocessorDefinitions="WIN32;_WINDOWS;DLL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -181,14 +181,50 @@
 	<References>
 	</References>
 	<Files>
-		<File
-			RelativePath=".\frustumculling_kernel.cu"
+		<Filter
+			Name="Headers"
 			>
-		</File>
-		<File
-			RelativePath="..\..\include\structs.h"
+			<File
+				RelativePath="..\..\inc\gpuCuller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\gpuCuller_internal.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Sources"
 			>
-		</File>
+			<File
+				RelativePath="..\..\src\gpuCuller_Common.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\gpuCuller_Data.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\gpuCuller_Frustum.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\gpuCuller_Occlusion.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Kernels"
+			>
+			<File
+				RelativePath="..\..\src\frustumculling_kernel.cu"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\gpuCuller_kernel.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\..\src\template.cu"
 			>

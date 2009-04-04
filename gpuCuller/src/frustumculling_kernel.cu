@@ -1,7 +1,12 @@
 #ifndef __FRUSTUM_CULLING_KERNEL_CU__
 #define __FRUSTUM_CULLING_KERNEL_CU__
 
-#include "structs.h"
+#include <gpuCuller_kernel.h>
+
+void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, int* out )
+{
+	classifyPlanePoint<<< gridSize, blockSize >>>( ( plane_t* )iplanes, ( point3d_t* )ipoints, nPlane, nPoint, out );
+}
 
 /* classifyPlanePoint
                  [X][ ............. ]
@@ -16,7 +21,7 @@
 Le resultat est une matrice de nPlane lignes x nPoint colonnes... si == 1 alors FRONT, si == 0, alors BACK.
 */
 __global__ void
-classifiyPlanePoint( plane_t* iplanes, point3d_t* ipoints, int nPoint, int nPlane, int* out )
+classifyPlanePoint( const plane_t* iplanes, const point3d_t* ipoints, int nPlane, int nPoint, int* out )
 {
 	//On recupere l'indice du resultat de classification dans la matrice resultat
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
