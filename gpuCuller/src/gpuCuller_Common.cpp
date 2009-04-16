@@ -28,38 +28,38 @@ void __stdcall gculDisableArray( GCULenum array )
 	}
 }
 
-GCUL_Array CurrentFrustumArray( void )
+FrustumType CurrentFrustumType( void )
 {
-	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUM_ARRAY ] )
+	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ] || ArrayStates[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ] )
 	{
 		assert( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ], "Pyramidal and spherical frustums can not be used at the same time." );
 
-		return GCUL_PYRAMIDALFRUSTUM_ARRAY;
+		return FRUSTUMTYPE_PYRAMIDAL;
 	}
 
 	if( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ] )
 	{
-		return GCUL_SPHERICALFRUSTUM_ARRAY;
+		return FRUSTUMTYPE_SPHERICAL;
 	}
 	
-	return GCUL_END_ARRAY;
+	return FRUSTUMTYPE_UNDEFINED;
 }
 
-GCUL_Array CurrentBoundingObjectArray( void )
+BoundingVolumeType CurrentBoundingVolumeType( void )
 {
-		if( ArrayStates[ GCUL_BBOXES_ARRAY ] )
+	if( ArrayStates[ GCUL_BBOXES_ARRAY ] )
 	{
 		assert( ArrayStates[ GCUL_BSPHERES_ARRAY ], "Boxes and spheres bounding volumes can not be used at the same time." );
 
-		return GCUL_BBOXES_ARRAY;
+		return BOUNDINGVOLUMETYPE_BOX;
 	}
 
 	if( ArrayStates[ GCUL_BSPHERES_ARRAY ] )
 	{
-		return GCUL_BSPHERES_ARRAY;
+		return BOUNDINGVOLUMETYPE_SPHERE;
 	}
 	
-	return GCUL_END_ARRAY;
+	return BOUNDINGVOLUMETYPE_UNDEFINED;
 }
 
 void AllocArrayDeviceMemory( GCULvoid** pointer, const ArrayInfo& info )

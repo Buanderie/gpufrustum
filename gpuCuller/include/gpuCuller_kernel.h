@@ -1,7 +1,7 @@
 #ifndef __GPUCULLER_KERNEL_H__
 #define __GPUCULLER_KERNEL_H__
 
-struct plane_t
+struct plane
 {
 	float a;
 	float b;
@@ -9,7 +9,7 @@ struct plane_t
 	float d;
 };
 
-struct point3d_t
+struct point3d
 {
 	float x;
 	float y;
@@ -18,9 +18,25 @@ struct point3d_t
 
 void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, int* out );
 
-__global__ void
-classifyPlanePoint( const plane_t* iplanes, const point3d_t* ipoints, int nPlane, int nPoint, int* out );
+void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out );
 
+__global__ void
+ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int nPlane, int nPoint, int* out );
+
+__global__ void
+ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out );
+
+__device__ int 
+SumArrayElements( const int* array, int elementCount );
+
+__device__ int
+CountArrayElementValue( const int* array, int elementCount, int elementValue );
+
+__device__ point3d
+UpperPoint( const point3d* box );
+
+__device__ point3d
+LowerPoint( const point3d* box );
 
 
 #endif // __GPUCULLER_KERNEL_H__

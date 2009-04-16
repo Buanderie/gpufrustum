@@ -16,18 +16,31 @@ struct ArrayInfo
 	GCULuint			size;
 	GCULint				elementWidth;
 	GCUL_ArrayDataType	type;
-	GCULsizei			stride;
 	const GCULvoid*		pointer;
 };
-#define UndefinedArrayInfo( elementWidth ) { 0, elementWidth, GCUL_UNKNOWN, NULL, 0 }
+#define UndefinedArrayInfo( elementWidth ) { 0, elementWidth, GCUL_UNKNOWN, NULL }
+
+enum FrustumType
+{
+	FRUSTUMTYPE_PYRAMIDAL = 0,
+	FRUSTUMTYPE_SPHERICAL,
+	FRUSTUMTYPE_UNDEFINED
+};
+
+enum BoundingVolumeType
+{
+	BOUNDINGVOLUMETYPE_BOX = 0,
+	BOUNDINGVOLUMETYPE_SPHERE,
+	BOUNDINGVOLUMETYPE_UNDEFINED
+};
 
 //--------------------
 // Functions
 //--------------------
 
-GCUL_Array CurrentFrustumArray( void );
+FrustumType CurrentFrustumType( void );
 
-GCUL_Array CurrentBoundingObjectArray( void );
+BoundingVolumeType CurrentBoundingVolumeType( void );
 
 void AllocArrayDeviceMemory( GCULvoid** array, const ArrayInfo& info );
 
@@ -38,5 +51,7 @@ void AllocResultDeviceMemory( GCULvoid** memory, const ArrayInfo& frustumInfo, c
 void FreeDeviceMemory( GCULvoid* memory );
 
 int SizeInBytes( GCUL_ArrayDataType type );
+
+int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GCULuint blockSize[ 3 ], GCUL_Classification* result );
 
 #endif // __GPUCULLER_INTERNAL_H__

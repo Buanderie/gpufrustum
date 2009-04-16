@@ -57,7 +57,8 @@ enum GCUL_Array
 {
 	GCUL_BBOXES_ARRAY = 0,			
 	GCUL_BSPHERES_ARRAY,			
-	GCUL_PYRAMIDALFRUSTUM_ARRAY,	
+	GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY,	
+	GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY,	
 	GCUL_SPHERICALFRUSTUM_ARRAY,	
 	GCUL_END_ARRAY				
 }; 
@@ -86,21 +87,40 @@ GPUCULLER_API
 void __stdcall gculDisableArray( GCULenum array );
 
 /**
-	Specifies data for pyramidal frustums.
+	Specifies planes for pyramidal frustums.
 	A frustum is defined by 6 planes {near, far, top, left, right, bottom}.
 	A plan is defined by 4 numbers {a, b, c, d}.
 	@param size		: Specifies the number of pyramidal frustums.
 	@param type		: Specifies the data type of each coordinate in the
 					  array.  Symbolic constants GCU_INT, GCU_FLOAT, 
 					  and GCU_DOUBLE are accepted. 
-	@param stride	: Specifies the byte offset between consecutive
-					  frustums. If stride is 0, the frustums are
-					  understood to be tightly packed in the array.
 	@param pointer	: Specifies a pointer to the first coordinate of the
 					  first plane in the array.
 */
 GPUCULLER_API
-void __stdcall gculPyramidalFrustumPointer( GCULuint size, GCULenum type, GCULsizei stride, const GCULvoid* pointer );
+void __stdcall gculPyramidalFrustumPlanesPointer( GCULuint size, GCULenum type, const GCULvoid* pointer );
+
+/**
+	Specifies corners for pyramidal frustums.
+	A frustum is defined by 8 points {neartopleft, neartopright, nearbottomleft, nearbottomright, fartopleft, fartopright, farbottomleft, farbottomright} 
+	A corner is defined by 3 numbers {x, y, z}.
+	@param size		: Specifies the number of pyramidal frustums.
+	@param type		: Specifies the data type of each coordinate in the
+					  array.  Symbolic constants GCU_INT, GCU_FLOAT, 
+					  and GCU_DOUBLE are accepted. 
+	@param pointer	: Specifies a pointer to the first coordinate of the
+					  first corner in the array.
+*/
+GPUCULLER_API
+void __stdcall gculPyramidalFrustumCornersPointer( GCULuint size, GCULenum type, const GCULvoid* pointer );
+
+/**
+	Specifies planes and corners for pyramidal frustums.
+	@see gculPyramidalFrustumPlanesPointer.
+	@see gculPyramidalFrustumCornersPointer.
+*/
+GPUCULLER_API
+void __stdcall gculPyramidalFrustumPointers( GCULuint size, GCULenum type, const GCULvoid* planes, const GCULvoid* corners );
 
 /**
 	Specifies data for boxes.
@@ -110,24 +130,21 @@ void __stdcall gculPyramidalFrustumPointer( GCULuint size, GCULenum type, GCULsi
 	@param type		: Specifies the data type of each coordinate in the
 					  array.  Symbolic constants GCU_INT, GCU_FLOAT, 
 					  and GCU_DOUBLE are accepted. 
-	@param stride	: Specifies the byte offset between consecutive
-					  boxes. If stride is 0, the boxes are understood 
-					  to be tightly packed in the array.
 	@param pointer	: Specifies a pointer to the first coordinate of the
 					  first box in the array.
 */
 GPUCULLER_API
-void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, GCULsizei stride, const GCULvoid* pointer );
+void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* pointer );
 
 /**
 	Process the frustum culling operation between the frustums array and the boxes array.
 	@param gridSize		: Specifies the dimension and size of the grid, such that 
 						  gridSize[ 0 ] * gridSize[ 1 ] equals the number of blocks being launched.
-						  If gridSize is {0, 0}, the system determines itseft the grid size according to the data.
+						  If gridSize is {0, 0}, the system determines itself the grid size according to the data.
 	@param blockSize	: Specifies the dimension and size of each block, such that 
 						  blockSize[ 0 ] * blockSize[ 1 ] * blockSize[ 2 ] equals the number of 
 						  threads per block.
-						  If blockSize is {0, 0}, the system determines itseft the grid size according to the data.
+						  If blockSize is {0, 0}, the system determines itself the grid size according to the data.
 	@param result		: The classification of boxes per frustum. 
 						  Classification of the frustum i with the box j is available at the index j + i * number of boxes.
 						  Symbolic constants GCU_ENCOSING, GCU_INSIDE, GCU_SPANNING and GCU_OUTSIDE are accepted. 
@@ -139,6 +156,6 @@ GCULint __stdcall gculProcessFrustumCulling( const GCULuint gridSize[ 2 ], const
 
 #ifdef __cplusplus
 }
-#endif  // #ifdef _DEBUG (else branch)
+#endif  // __cplusplus
 
-#endif
+#endif	// __GPUCULLER_H__

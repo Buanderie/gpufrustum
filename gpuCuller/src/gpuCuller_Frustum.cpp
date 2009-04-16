@@ -9,22 +9,41 @@ extern ArrayInfo ArrayInfos[ GCUL_END_ARRAY ];
 								type ==	GCUL_FLOAT  || \
 								type ==	GCUL_DOUBLE, "Invalid type." ) \
 
-void __stdcall gculPyramidalFrustumPointer( GCULuint size, GCULenum type, GCULsizei stride, const GCULvoid* pointer )
+void __stdcall gculPyramidalFrustumPlanesPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
 {
 	//--------------------
 	// Pre-conditions
 	ARRAY_ASSERT();
 	//--------------------
 
-	ArrayInfo* info = &ArrayInfos[ GCUL_PYRAMIDALFRUSTUM_ARRAY ];
+	ArrayInfo* info = &ArrayInfos[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ];
 
 	info->size		= size;
 	info->type		= ( GCUL_ArrayDataType )type;
-	info->stride	= stride;
 	info->pointer	= pointer;
 }
 
-void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, GCULsizei stride, const GCULvoid* pointer )
+void __stdcall gculPyramidalFrustumCornersPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
+{
+	//--------------------
+	// Pre-conditions
+	ARRAY_ASSERT();
+	//--------------------
+
+	ArrayInfo* info = &ArrayInfos[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ];
+
+	info->size		= size;
+	info->type		= ( GCUL_ArrayDataType )type;
+	info->pointer	= pointer;
+}
+
+void __stdcall gculPyramidalFrustumPointers( GCULuint size, GCULenum type, const GCULvoid* planes, const GCULvoid* corners )
+{
+	gculPyramidalFrustumPlanesPointer ( size, type, planes  );
+	gculPyramidalFrustumCornersPointer( size, type, corners );
+}
+
+void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
 {
 	//--------------------
 	// Pre-conditions
@@ -35,7 +54,6 @@ void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, GCULsizei stride,
 
 	info->size		= size;
 	info->type		= ( GCUL_ArrayDataType )type;
-	info->stride	= stride;
 	info->pointer	= pointer;
 }
 
@@ -47,88 +65,138 @@ GCULint __stdcall gculProcessFrustumCulling( const GCULuint gridSize[ 2 ], const
 	//--------------------
 
 	// Determine the frustum matrix to use.
-	GCULenum currentFrustumArray = CurrentFrustumArray();
+	FrustumType currentFrustumType = CurrentFrustumType();
 
-	if( currentFrustumArray == GCUL_END_ARRAY )
+	if( currentFrustumType == FRUSTUMTYPE_UNDEFINED )
 	{
 		assert( false, "No frustum array enabled." );
 		return -1;
 	}
 
-	// Determine the bouding volumes matrix to use.
-	GCULenum currentBoundingObjectArray = CurrentBoundingObjectArray();
+	// Determine the bounding volumes matrix to use.
+	GCULenum currentBoundingVolumeType = CurrentBoundingVolumeType();
 
-	if( currentBoundingObjectArray == GCUL_END_ARRAY )
+	if( currentBoundingVolumeType == BOUNDINGVOLUMETYPE_UNDEFINED )
 	{
 		assert( false, "No bounding volume array enabled." );
 		return -1;
 	}
 
-	// Allocate frustums on device memory.
-	const ArrayInfo&	frustumInfo	= ArrayInfos[ currentFrustumArray ];
-	GCULvoid*			frustums	= NULL;
-
-	AllocArrayDeviceMemory( &frustums, frustumInfo );
-
-	if( frustums == NULL )
+	if( currentFrustumType == FRUSTUMTYPE_PYRAMIDAL && currentBoundingVolumeType == BOUNDINGVOLUMETYPE_BOX )
 	{
-		assert( false, "Can not allocate device memory for frustums." );
+		return ProcessPyramidalFrustumAABBoxCulling( gridSize, blockSize, result );
+	}
+	else
+	{
+		assert( false, "Not implemented yet." );
+		return -1;
+	}
+}
+
+int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GCULuint blockSize[ 3 ], GCUL_Classification* result )
+{
+	//--------------------
+	// First pass.
+
+	// Allocate frustum planes on device memory.
+	const ArrayInfo&	frustumPlanesInfo	= ArrayInfos[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ];
+	GCULvoid*			frustumsPlanes		= NULL;
+
+	AllocArrayDeviceMemory( &frustumsPlanes, frustumPlanesInfo );
+
+	if( frustumsPlanes == NULL )
+	{
+		assert( false, "Can not allocate device memory for frustum planes." );
 		return -1;
 	}
 
 	// Allocate bounding volumes on device memory.
-	const ArrayInfo&	boundingInfo	= ArrayInfos[ currentFrustumArray ];
-	GCULvoid*			boundingVolumes	= NULL;
+	const ArrayInfo&	boundingBoxesInfo	= ArrayInfos[ GCUL_BBOXES_ARRAY ];
+	GCULvoid*			boundingBoxes		= NULL;
 
-	AllocArrayDeviceMemory( &boundingVolumes, boundingInfo );
+	AllocArrayDeviceMemory( &boundingBoxes, boundingBoxesInfo );
 
-	if( boundingVolumes == NULL )
+	if( boundingBoxes == NULL )
 	{
 		assert( false, "Can not allocate device memory for bounding volumes." );
 		return -1;
 	}
 
 	// Initialize input data on device memory.
-	CopyArrayToDeviceMemory( frustums,			frustumInfo		);
-	CopyArrayToDeviceMemory( boundingVolumes,	boundingInfo	);
+	CopyArrayToDeviceMemory( frustumsPlanes, frustumPlanesInfo	);
+	CopyArrayToDeviceMemory( boundingBoxes,	 boundingBoxesInfo	);
 
-	// Initialize output data on device memory.
-	GCULvoid* resultDeviceMemory = NULL;
-	AllocResultDeviceMemory( &resultDeviceMemory, frustumInfo, boundingInfo );
+	// Allocate the matrix for the first pass.
+	GCULvoid* pointPlaneIntersection = NULL;
+	cudaMalloc( &pointPlaneIntersection, frustumPlanesInfo.size * boundingBoxesInfo.size * sizeof( int ) );
 
-	if( currentFrustumArray == GCUL_PYRAMIDALFRUSTUM_ARRAY && currentBoundingObjectArray == GCUL_BBOXES_ARRAY )
-	{
-		// Process first pass : intersect each plane with each box point.
-		
-		// Allocate the matrix for the first pass.
-		GCULvoid* pointPlaneIntersection = NULL;
-		cudaMalloc( &pointPlaneIntersection, frustumInfo.size * boundingInfo.size * sizeof( int ) );
+	dim3 dimBlock1stPass(12, 12);
+	dim3 dimGrid1stPass(10 / dimBlock1stPass.x, 10 / dimBlock1stPass.y);
 
-		dim3 dimBlock(12, 12);
-		dim3 dimGrid(10 / dimBlock.x, 10 / dimBlock.y);
+	// Process first pass : intersect each plane with each box point.
+	ClassifyPlanesPoints( 
+		dimBlock1stPass,
+		dimGrid1stPass,
+		frustumsPlanes, 
+		boundingBoxes, 
+		frustumPlanesInfo.size * 6, 
+		boundingBoxesInfo.size * 8, 
+		(int*)pointPlaneIntersection 
+	);
 
-		ClassifyPlanesPoints( 
-			dimBlock,
-			dimGrid,
-			frustumInfo.pointer, 
-			boundingInfo.pointer, 
-			frustumInfo.size * 6, 
-			boundingInfo.size * 8, 
-			(int*)pointPlaneIntersection 
-		);
+	// Free device input memory.
+	FreeDeviceMemory( frustumsPlanes );
 
-		// Free device input memory.
-		FreeDeviceMemory( frustums		  );
-		FreeDeviceMemory( boundingVolumes );
-
-		// Process second pass : determine from first pass the intersection between each frustum with each box.
-	}
-	else
-	{
-		assert( false, "Not implemented yet." );
-	}
+	//--------------------
 	
+	//--------------------
+	// Second pass.
+
+	// Allocate the result matrix on device memory.
+	GCULvoid* resultDeviceMemory = NULL;	
+	AllocResultDeviceMemory( &resultDeviceMemory, frustumPlanesInfo, boundingBoxesInfo );
+
+	// Allocate frustum corners on device memory.
+	const ArrayInfo& frustumCornersInfo	= ArrayInfos[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ];
+	GCULvoid*		 frustumsCorners	= NULL;
+
+	AllocArrayDeviceMemory( &frustumsCorners, frustumCornersInfo );
+
+	if( frustumsCorners == NULL )
+	{
+		assert( false, "Can not allocate device memory for frustum corners." );
+		return -1;
+	}
+
+	// Initialize input data on device memory.
+	CopyArrayToDeviceMemory( frustumsCorners, frustumCornersInfo );
+
+	dim3 dimBlock2ndPass(12, 12);
+	dim3 dimGrid2ndPass(10 / dimBlock2ndPass.x, 10 / dimBlock2ndPass.y);
+
+	// Process second pass : determine from first pass output the intersection between each frustum with each box.
+	ClassifyPyramidalFrustumBoxes( 
+		dimBlock2ndPass,
+		dimGrid2ndPass,
+		(const float*)frustumsCorners, 
+		(const float*)boundingBoxes,
+		(const int*)pointPlaneIntersection, 
+		frustumPlanesInfo.size * 6, 
+		boundingBoxesInfo.size * 8, 
+		(int*)resultDeviceMemory 
+	);
+
+	// Free device input memory.
+	FreeDeviceMemory( frustumsCorners		 );
+	FreeDeviceMemory( boundingBoxes			 );
+	FreeDeviceMemory( pointPlaneIntersection );
+
+	// Copy the result from device memory.
+	cudaMemcpy( result, resultDeviceMemory, frustumPlanesInfo.size * boundingBoxesInfo.size, cudaMemcpyDeviceToHost);
+
 	FreeDeviceMemory( resultDeviceMemory );
+
+	//--------------------
 
 	return 0;
 }
