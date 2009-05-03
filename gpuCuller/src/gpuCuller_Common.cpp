@@ -66,7 +66,7 @@ void AllocArrayDeviceMemory( GCULvoid** pointer, const ArrayInfo& info )
 {
 	int size = info.size * info.elementWidth * SizeInBytes( info.type );
 	
-	cudaMalloc((void**)&pointer, size);
+	cudaMalloc((void**)pointer, size);
 }
 
 void CopyArrayToDeviceMemory( GCULvoid* array, const ArrayInfo& info )

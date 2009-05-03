@@ -2,8 +2,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#if !defined(AFX_GLVECTOR_H__F526A5CF_89B5_4F20_8F2C_517D83879D35__INCLUDED_)
-#define AFX_GLVECTOR_H__F526A5CF_89B5_4F20_8F2C_517D83879D35__INCLUDED_
+#ifndef __GLVECTOR_H__
+#define __GLVECTOR_H__
 
 #include <windows.h>		// Header File For Windows
 #include <gl\gl.h>			// Header File For The OpenGL32 Library

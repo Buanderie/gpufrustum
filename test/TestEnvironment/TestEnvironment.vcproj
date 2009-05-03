@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\gpuCuller\include;&quot;.\ext\SFML-1.4\include&quot;"
+				AdditionalIncludeDirectories="..\..\gpuCuller\inc;&quot;.\ext\SFML-1.4\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="gpuCuller.lib opengl32.lib glu32.lib sfml-system.lib sfml-window.lib"
+				AdditionalDependencies="gpuCuller-d.lib opengl32.lib glu32.lib sfml-system.lib sfml-window.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;./ext/SFML-1.4/lib/vc2008&quot;;../../gpuCuller/lib"
 				GenerateDebugInformation="true"
@@ -179,15 +179,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\glAABB.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\glCamera.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\glFrustum.cpp"
+				RelativePath=".\glMatrix4f.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\glPlane.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\glPoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\glPyramidalFrustum.cpp"
 				>
 			</File>
 			<File
@@ -199,11 +211,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\glVector4f.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\rendering.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\utils.cpp"
 				>
 			</File>
 		</Filter>
@@ -213,15 +233,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\glAABB.h"
+				>
+			</File>
+			<File
 				RelativePath=".\glCamera.h"
 				>
 			</File>
 			<File
-				RelativePath=".\glFrustum.h"
+				RelativePath=".\glMatrix4f.h"
+				>
+			</File>
+			<File
+				RelativePath=".\glPlane.h"
 				>
 			</File>
 			<File
 				RelativePath=".\glPoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\glPyramidalFrustum.h"
 				>
 			</File>
 			<File
@@ -233,7 +265,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\glVector4f.h"
+				>
+			</File>
+			<File
 				RelativePath=".\rendering.h"
+				>
+			</File>
+			<File
+				RelativePath=".\utils.h"
 				>
 			</File>
 		</Filter>

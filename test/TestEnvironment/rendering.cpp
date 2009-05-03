@@ -21,12 +21,12 @@ void drawFloorGrid()
 	glDisable(GL_DEPTH_TEST);	// Turn Depth Testing Off
 
 	for(int i=-1000;i<=1000;i++) {
-		if (i==0) { glColor3f(1.0,0.0,0.0); glLineWidth(2.0f);} else { glColor3f(0.50,.50,.50); glLineWidth(1.0f);};
+		if (i==0) { glColor3f(0.0,0.0,1.0); glLineWidth(2.0f);} else { glColor3f(0.50,.50,.50); glLineWidth(1.0f);};
 		glBegin(GL_LINES);
 		glVertex3f(i,0,-1000);
 		glVertex3f(i,0,1000);
 		glEnd();
-		if (i==0) { glColor3f(0.0,0.0,1.0); glLineWidth(2.0f);} else { glColor3f(0.50,.50,.50); glLineWidth(1.0f);};
+		if (i==0) { glColor3f(1.0,0.0,0.0); glLineWidth(2.0f);} else { glColor3f(0.50,.50,.50); glLineWidth(1.0f);};
 		glBegin(GL_LINES);
 		glVertex3f(1000,0,i);
 		glVertex3f(-1000,0,i);
@@ -38,6 +38,20 @@ void drawFloorGrid()
 	glBegin(GL_LINES);
 	glVertex3f(0,-1000,0);
 	glVertex3f(0,1000,0);
+	glEnd();
+
+	glPointSize(10.0f);
+	glColor3f(1.0f,0.0f,0.0f);
+	glBegin(GL_POINTS);
+		glVertex3f(1.0f,0.0f,0.0f);
+	glEnd();
+	glColor3f(0.0f,1.0f,0.0f);
+	glBegin(GL_POINTS);
+		glVertex3f(0.0f,1.0f,0.0f);
+	glEnd();
+	glColor3f(0.0f,0.0f,1.0f);
+	glBegin(GL_POINTS);
+		glVertex3f(0.0f,0.0f,1.0f);
 	glEnd();
 
 }

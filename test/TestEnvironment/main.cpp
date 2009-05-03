@@ -1,20 +1,29 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
+#include <vector>
 #include <SFML/Window.hpp>
 
 #include "rendering.h"
 #include "glCamera.h"
 #include "glPoint.h"
+#include "glMatrix4f.h"
+#include "glPyramidalFrustum.h"
+#include "frustum-1.h"
+#include "CFrustum.h"
+#include "utils.h"
+
+using namespace std;
 
 ///////////////// Variables Globales ///////////////////////
 glCamera* cam;
+vector<glPyramidalFrustum> frustumList;
 ////////////////////////////////////////////////////////////
 
 int main()
 {
     //Create the main window
-	sf::Window App(sf::VideoMode::GetDesktopMode(), "SFML OpenGL", sf::Style::Fullscreen);
+	sf::Window App(sf::VideoMode::GetDesktopMode(), "gpuCuller Demo");
 
     //Create a clock for measuring time elapsed
     sf::Clock Clock;
@@ -31,17 +40,31 @@ int main()
     //Setup a perspective projection
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(90.f, 1.f, 1.f, 500.f);
+    gluPerspective(90.f, 1.f, 1.f, 100.f);
 
 	//Mise en place des parametres camera
 	cam = new glCamera();
-	cam->m_Position.y = 10;
-	cam->m_Position.z = -20;
+	cam->m_Position.x=0;
+	cam->m_Position.y = 0;
+	cam->m_Position.z = 0;
 	cam->m_MaxForwardVelocity = 5.0f;
 	cam->m_MaxPitchRate = 5.0f;
 	cam->m_MaxHeadingRate = 5.0f;
 	cam->m_PitchDegrees = 0.0f;
 	cam->m_HeadingDegrees = 0.0f;
+	
+	generateRandomPyrFrustums(	10000,
+								45, 90,
+								1, 2,
+								5, 10,
+								3.0f/4.0f, 3.0f/4.0f,
+								-1000, 1000,
+								0, 0,
+								-1000, 1000,
+								0, 0,
+								-180, 180,
+								0, 0,
+								frustumList );
 
     // Start game loop
     while (App.IsOpened())
@@ -67,6 +90,11 @@ int main()
 				cam->m_ForwardVelocity = -10.0f*App.GetFrameTime();
 			if( Event.Type == sf::Event::KeyReleased && Event.Key.Code == sf::Key::Down )
 				cam->m_ForwardVelocity = 0;
+
+			if( Event.Type == sf::Event::KeyPressed && Event.Key.Code == sf::Key::C )
+			{
+
+			}
 			
 			if( Event.Type == sf::Event::MouseMoved )
 			{
@@ -96,57 +124,13 @@ int main()
 
 		drawFloorGrid( );
 
-		glPushMatrix();
-        glTranslatef(0.f, 10.f, -200.f);
-        glRotatef(Clock.GetElapsedTime() * 50, 1.f, 0.f, 0.f);
-        glRotatef(Clock.GetElapsedTime() * 30, 0.f, 1.f, 0.f);
-        glRotatef(Clock.GetElapsedTime() * 90, 0.f, 0.f, 1.f);
+		//display the frustums
+		for(int i = 0; i < frustumList.size(); ++i )
+			frustumList[i].draw();
 
-        // Draw a cube
-		glColor3f(1.0f,0.0,0.0);
-        glBegin(GL_QUADS);
-            glVertex3f(-50.f, -50.f, -50.f);
-            glVertex3f(-50.f,  50.f, -50.f);
-            glVertex3f( 50.f,  50.f, -50.f);
-            glVertex3f( 50.f, -50.f, -50.f);
-
-            glVertex3f(-50.f, -50.f, 50.f);
-            glVertex3f(-50.f,  50.f, 50.f);
-            glVertex3f( 50.f,  50.f, 50.f);
-            glVertex3f( 50.f, -50.f, 50.f);
-
-            glVertex3f(-50.f, -50.f, -50.f);
-            glVertex3f(-50.f,  50.f, -50.f);
-            glVertex3f(-50.f,  50.f,  50.f);
-            glVertex3f(-50.f, -50.f,  50.f);
-
-            glVertex3f(50.f, -50.f, -50.f);
-            glVertex3f(50.f,  50.f, -50.f);
-            glVertex3f(50.f,  50.f,  50.f);
-            glVertex3f(50.f, -50.f,  50.f);
-
-            glVertex3f(-50.f, -50.f,  50.f);
-            glVertex3f(-50.f, -50.f, -50.f);
-            glVertex3f( 50.f, -50.f, -50.f);
-            glVertex3f( 50.f, -50.f,  50.f);
-
-            glVertex3f(-50.f, 50.f,  50.f);
-            glVertex3f(-50.f, 50.f, -50.f);
-            glVertex3f( 50.f, 50.f, -50.f);
-            glVertex3f( 50.f, 50.f,  50.f);
-
-        glEnd();
-		glPopMatrix();
-
-
-
-		/*matrix4f_t mat;
-		float fvViewMatrix[ 16 ];
-		glGetFloatv( GL_MODELVIEW_MATRIX, fvViewMatrix );
-		fillMatrix(fvViewMatrix, mat );
-		plane_t fplanes[6];
-		extractPlanes( fplanes, mat, false );
-*/
+		//Display an AABB
+		glAABB a(glVector4f(0,0,0,0), glVector4f(1,1,1,1));
+		a.draw();
 
         // Finally, display rendered frame on screen
         App.Display();
@@ -156,3 +140,4 @@ int main()
 
     return EXIT_SUCCESS;
 }
+

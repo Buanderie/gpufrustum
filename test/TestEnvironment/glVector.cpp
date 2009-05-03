@@ -18,7 +18,7 @@ glVector::~glVector()
 
 }
 
-void glVector::operator *=(GLfloat scalar)
+void glVector::operator *=(float scalar)
 {
 	i *= scalar;
 	j *= scalar;
