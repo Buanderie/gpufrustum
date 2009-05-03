@@ -10,6 +10,6 @@ bool ArrayStates[ GCUL_END_ARRAY ] =
 ArrayInfo ArrayInfos[ GCUL_END_ARRAY ] = 
 {
 	UndefinedArrayInfo( 24 ),	// GCU_BOXES_ARRAY
-	UndefinedArrayInfo( 24 ),	// GCU_PYRAMIDALFRUSTUM_ARRAY
-	UndefinedArrayInfo( 12 )	// GCU_SPHERICALFRUSTUM_ARRAY
+	UndefinedArrayInfo( 12 ),	// GCU_PYRAMIDALFRUSTUM_ARRAY
+	UndefinedArrayInfo( 24 )	// GCU_SPHERICALFRUSTUM_ARRAY
 };

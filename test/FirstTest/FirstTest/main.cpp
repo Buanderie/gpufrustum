@@ -6,12 +6,17 @@ void main( int argc, char** argv)
 	//Initialize gpuCuller
 	gculInitialize( argc, argv );
 
+	gculDisableArray( GCUL_SPHERICALFRUSTUM_ARRAY );
+	gculDisableArray( GCUL_BSPHERES_ARRAY );
+
 	//Initialize data
 	gculEnableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
+	
 	//Add 1 frustum
 	gculPyramidalFrustumPlanesPointer( 1, GCUL_FLOAT, frustum_planes );
-	gculEnableArray( GCUL_BBOXES_ARRAY );
+	
 	//Add 1 AABB
+	gculEnableArray( GCUL_BBOXES_ARRAY );
 	gculBoxesPointer( 1, GCUL_FLOAT, boxA_points );
 
 	//Process

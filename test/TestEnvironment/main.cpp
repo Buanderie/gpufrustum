@@ -9,8 +9,6 @@
 #include "glPoint.h"
 #include "glMatrix4f.h"
 #include "glPyramidalFrustum.h"
-#include "frustum-1.h"
-#include "CFrustum.h"
 #include "utils.h"
 
 using namespace std;
