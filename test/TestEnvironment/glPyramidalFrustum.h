@@ -39,6 +39,10 @@ public:
 	void DoSomething();
 	
 	void draw();
+
+	void extractPlanesData( float* out );
+	void extractCornersData( float* out );
+
 };
 
 #endif

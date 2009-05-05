@@ -356,3 +356,45 @@ void glPyramidalFrustum::draw()
 
 	glEnd();
 }
+
+void glPyramidalFrustum::extractPlanesData( float* out )
+{
+	out[0] = m_Near.m_Normal[0];
+	out[1] = m_Near.m_Normal[1];
+	out[2] = m_Near.m_Normal[2];
+	out[3] = m_Near.m_Normal[3];
+
+	out[4] = m_Far.m_Normal[0];
+	out[5] = m_Far.m_Normal[1];
+	out[6] = m_Far.m_Normal[2];
+	out[7] = m_Far.m_Normal[3];
+
+	out[8] = m_Left.m_Normal[0];
+	out[9] = m_Left.m_Normal[1];
+	out[10] = m_Left.m_Normal[2];
+	out[11] = m_Left.m_Normal[3];
+
+	out[12] = m_Right.m_Normal[0];
+	out[13] = m_Right.m_Normal[1];
+	out[14] = m_Right.m_Normal[2];
+	out[15] = m_Right.m_Normal[3];
+
+	out[16] = m_Up.m_Normal[0];
+	out[17] = m_Up.m_Normal[1];
+	out[18] = m_Up.m_Normal[2];
+	out[19] = m_Up.m_Normal[3];
+
+	out[20] = m_Down.m_Normal[0];
+	out[21] = m_Down.m_Normal[1];
+	out[22] = m_Down.m_Normal[2];
+	out[23] = m_Down.m_Normal[3];
+}
+
+void glPyramidalFrustum::extractCornersData( float* out )
+{
+	for(int i = 0; i < 8; ++i )
+	{
+		for(int j = 0; j < 4; ++j )
+			out[i*4 + j] = p[i][j];
+	}
+}
