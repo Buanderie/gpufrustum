@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <gpuCuller_kernel.h>
 
 void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, int* out )
@@ -113,8 +114,14 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 		// For each point.
 		for( int j = 0; j < 8; ++j )
 		{
-			int index = ( threadX * 6 + i ) + ( ( threadY + j ) * planeCount );
-
+			//int index = ( threadX * 6 + i ) + ( ( threadY + j ) * planeCount );
+			int gridWidth = 6 * gridDim.x;
+			int offsetX = 6 * blockIdx.x;
+			int offsetY = blockIdx.y * 8 * gridWidth;
+			int index = offsetX + offsetY + gridWidth*j + i;
+#ifdef DEBUG
+			printf("lol=%d\ -- mdr=%dr\n", index, planePointClassification[ index ]);
+#endif
 			sums[ i ] += planePointClassification[ index ];
 		}
 	}
@@ -130,7 +137,7 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 	if( arrayCountEight == 6 )
 	{
 		// All points are inside.
-		out[ 0 ] = 1; // GCU_INSIDE
+		out[ outIndex ] = 1; // GCU_INSIDE
 		return;
 	}
 	else
