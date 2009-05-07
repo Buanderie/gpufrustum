@@ -74,17 +74,17 @@ void __stdcall gculInitialize( int argc, char** argv );
 
 /**
 	Specifies the array to enable.
-	Symbolic constants GCU_BOXES_ARRAY, GCU_PYRAMIDALFRUSTUM_ARRAY and GCU_SPHERICALFRUSTUM_ARRAY are accepted. 
+	Symbolic constants GCU_BOXES_ARRAY, GCUL_BSPHERES_ARRAY, GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY, GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY and GCU_SPHERICALFRUSTUM_ARRAY are accepted. 
 */
 GPUCULLER_API
-void __stdcall gculEnableArray( GCULenum array );
+void __stdcall gculEnableArray( GCUL_Array array );
 
 /**
 	Specifies the array to disable.
-	Symbolic constants GCU_BOXES_ARRAY, GCU_PYRAMIDALFRUSTUM_ARRAY and GCU_SPHERICALFRUSTUM_ARRAY are accepted. 
+	Symbolic constants GCU_BOXES_ARRAY, GCUL_BSPHERES_ARRAY, GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY, GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY and GCU_SPHERICALFRUSTUM_ARRAY are accepted. 
 */
 GPUCULLER_API
-void __stdcall gculDisableArray( GCULenum array );
+void __stdcall gculDisableArray( GCUL_Array array );
 
 /**
 	Specifies planes for pyramidal frustums.

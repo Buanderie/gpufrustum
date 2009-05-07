@@ -74,7 +74,7 @@ GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 	}
 
 	// Determine the bounding volumes matrix to use.
-	GCULenum currentBoundingVolumeType = CurrentBoundingVolumeType();
+	BoundingVolumeType currentBoundingVolumeType = CurrentBoundingVolumeType();
 
 	if( currentBoundingVolumeType == BOUNDINGVOLUMETYPE_UNDEFINED )
 	{

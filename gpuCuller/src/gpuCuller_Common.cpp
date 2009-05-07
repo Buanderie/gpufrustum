@@ -12,7 +12,7 @@ void __stdcall gculInitialize( int argc, char** argv )
 		cudaSetDevice( cutGetMaxGflopsDeviceId() );
 }
 
-void __stdcall gculEnableArray( GCULenum array )
+void __stdcall gculEnableArray( GCUL_Array array )
 {
 	if( array < GCUL_END_ARRAY )
 	{
@@ -20,7 +20,7 @@ void __stdcall gculEnableArray( GCULenum array )
 	}
 }
 
-void __stdcall gculDisableArray( GCULenum array )
+void __stdcall gculDisableArray( GCUL_Array array )
 {
 	if( array < GCUL_END_ARRAY )
 	{
@@ -30,9 +30,9 @@ void __stdcall gculDisableArray( GCULenum array )
 
 FrustumType CurrentFrustumType( void )
 {
-	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ] || ArrayStates[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ] )
+	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ] && ArrayStates[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ] )
 	{
-		//assert( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ], "Pyramidal and spherical frustums can not be used at the same time." );
+		assert( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ] == false, "Pyramidal and spherical frustums can not be used at the same time." );
 
 		return FRUSTUMTYPE_PYRAMIDAL;
 	}
@@ -49,7 +49,7 @@ BoundingVolumeType CurrentBoundingVolumeType( void )
 {
 	if( ArrayStates[ GCUL_BBOXES_ARRAY ] )
 	{
-		//assert( ArrayStates[ GCUL_BSPHERES_ARRAY ], "Boxes and spheres bounding volumes can not be used at the same time." );
+		assert( ArrayStates[ GCUL_BSPHERES_ARRAY ] == false, "Boxes and spheres bounding volumes can not be used at the same time." );
 
 		return BOUNDINGVOLUMETYPE_BOX;
 	}

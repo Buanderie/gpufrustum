@@ -6,7 +6,7 @@
 #include <windows.h>
 
 #ifndef NDEBUG
-#define assert( condition, message ) if( !condition ) { std::cerr<< message << __FILE__ << __LINE__ << std::endl; DebugBreak(); }
+	#define assert( condition, message ) if( !(condition) ) { std::cerr<< message << __FILE__ << __LINE__ << std::endl; DebugBreak(); }
 #else
 	#define assert( condition, message )
 #endif
