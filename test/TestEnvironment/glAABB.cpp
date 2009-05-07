@@ -9,6 +9,11 @@ glAABB::glAABB(glVector4f minPos, glVector4f maxPos)
 	m_MaxPos = maxPos;
 }
 
+glAABB::glAABB(const glAABB& val)
+{
+	(*this) = val;
+}
+
 void glAABB::draw()
 {
 	glColor3f(0.0f,1.0f,0.0f);

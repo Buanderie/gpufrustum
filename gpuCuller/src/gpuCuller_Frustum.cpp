@@ -13,7 +13,7 @@ void __stdcall gculPyramidalFrustumPlanesPointer( GCULuint size, GCULenum type, 
 {
 	//--------------------
 	// Pre-conditions
-	ARRAY_ASSERT();
+	//ARRAY_ASSERT();
 	//--------------------
 
 	ArrayInfo* info = &ArrayInfos[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ];
@@ -27,7 +27,7 @@ void __stdcall gculPyramidalFrustumCornersPointer( GCULuint size, GCULenum type,
 {
 	//--------------------
 	// Pre-conditions
-	ARRAY_ASSERT();
+	//ARRAY_ASSERT();
 	//--------------------
 
 	ArrayInfo* info = &ArrayInfos[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ];
@@ -47,7 +47,7 @@ void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* p
 {
 	//--------------------
 	// Pre-conditions
-	ARRAY_ASSERT();
+	//ARRAY_ASSERT();
 	//--------------------
 
 	ArrayInfo* info = &ArrayInfos[ GCUL_BBOXES_ARRAY ];
@@ -57,7 +57,7 @@ void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* p
 	info->pointer	= pointer;
 }
 
-GCULint __stdcall gculProcessFrustumCulling( const GCULuint gridSize[ 2 ], const GCULuint blockSize[ 3 ], GCUL_Classification* result )
+GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 {
 	//--------------------
 	// Pre-conditions
@@ -84,7 +84,7 @@ GCULint __stdcall gculProcessFrustumCulling( const GCULuint gridSize[ 2 ], const
 
 	if( currentFrustumType == FRUSTUMTYPE_PYRAMIDAL && currentBoundingVolumeType == BOUNDINGVOLUMETYPE_BOX )
 	{
-		return ProcessPyramidalFrustumAABBoxCulling( gridSize, blockSize, result );
+		return ProcessPyramidalFrustumAABBoxCulling( result );
 	}
 	else
 	{
@@ -93,7 +93,7 @@ GCULint __stdcall gculProcessFrustumCulling( const GCULuint gridSize[ 2 ], const
 	}
 }
 
-int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GCULuint blockSize[ 3 ], GCUL_Classification* result )
+int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 {
 	//--------------------
 	// First pass.
@@ -128,10 +128,10 @@ int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GC
 
 	// Allocate the matrix for the first pass.
 	GCULvoid* pointPlaneIntersection = NULL;
-	cudaMalloc( &pointPlaneIntersection, frustumPlanesInfo.size * boundingBoxesInfo.size * sizeof( int ) );
+	cudaMalloc( &pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8) * sizeof( int ));
 
-	dim3 dimBlock1stPass(12, 12);
-	dim3 dimGrid1stPass(10 / dimBlock1stPass.x, 10 / dimBlock1stPass.y);
+	dim3 dimBlock1stPass(4, 3);
+	dim3 dimGrid1stPass(frustumPlanesInfo.size * 6, boundingBoxesInfo.size * 8);
 
 	// Process first pass : intersect each plane with each box point.
 	ClassifyPlanesPoints( 
@@ -146,6 +146,22 @@ int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GC
 
 	// Free device input memory.
 	FreeDeviceMemory( frustumsPlanes );
+
+	//YA
+	int* h_odata = new int[48];
+	cutilSafeCall( cudaMemcpy( h_odata, pointPlaneIntersection, 48*sizeof(int),
+                                cudaMemcpyDeviceToHost) );
+	//for each point
+	for(int i = 0; i < 8; ++i )
+	{
+		//for each plane
+		for( int j = 0; j < 6; ++j )
+		{
+			printf("%d ", h_odata[i*6 + j]);		
+		}
+		printf("\r\n");
+	}
+	//
 
 	//--------------------
 	
@@ -171,8 +187,8 @@ int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GC
 	// Initialize input data on device memory.
 	CopyArrayToDeviceMemory( frustumsCorners, frustumCornersInfo );
 
-	dim3 dimBlock2ndPass(12, 12);
-	dim3 dimGrid2ndPass(10 / dimBlock2ndPass.x, 10 / dimBlock2ndPass.y);
+	dim3 dimBlock2ndPass(1, 1);
+	dim3 dimGrid2ndPass(1, 1);
 
 	// Process second pass : determine from first pass output the intersection between each frustum with each box.
 	ClassifyPyramidalFrustumBoxes( 
@@ -192,7 +208,7 @@ int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GC
 	FreeDeviceMemory( pointPlaneIntersection );
 
 	// Copy the result from device memory.
-	cudaMemcpy( result, resultDeviceMemory, frustumPlanesInfo.size * boundingBoxesInfo.size, cudaMemcpyDeviceToHost);
+	cutilSafeCall(cudaMemcpy( result, resultDeviceMemory, frustumPlanesInfo.size * boundingBoxesInfo.size * sizeof(int), cudaMemcpyDeviceToHost));
 
 	FreeDeviceMemory( resultDeviceMemory );
 

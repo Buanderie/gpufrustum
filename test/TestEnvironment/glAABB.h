@@ -11,6 +11,7 @@ private:
 
 public:
 	glAABB(glVector4f minPos, glVector4f maxPos);
+	glAABB(const glAABB& val);
 	void draw();
 };
 

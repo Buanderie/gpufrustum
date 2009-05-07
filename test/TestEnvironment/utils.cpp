@@ -38,6 +38,7 @@ void generateRandomPyrFrustums( int n,
 void generateRandomAABBs(	int n,
 							float minWidth, float maxWidth,
 							float minHeight, float maxHeight,
+							float minDepth, float maxDepth,
 							float minPosX, float maxPosX,
 							float minPosY, float maxPosY,
 							float minPosZ, float maxPosZ,
@@ -46,6 +47,13 @@ void generateRandomAABBs(	int n,
 {
 	for(int i = 0; i < n; ++i)
 	{
-		
+		float width = minWidth + randf()*(maxWidth-minWidth);
+		float height = minHeight + randf()*(maxHeight-minHeight);
+		float depth = minDepth + randf()*(maxDepth-minDepth);
+		float PosX = minPosX + randf()*( maxPosX - minPosX );
+		float PosY = minPosY + randf()*( maxPosY - minPosY );
+		float PosZ = minPosZ + randf()*( maxPosZ - minPosZ );
+		glAABB a( glVector4f( PosX - width/2, PosY - depth/2, PosZ - height/2, 0 ), glVector4f( PosX + width/2, PosY + depth/2, PosZ + height/2, 0 ));
+		list.push_back( a );
 	}
 }

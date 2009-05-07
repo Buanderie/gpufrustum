@@ -34,6 +34,8 @@
 			<Tool
 				Name="CUDA Build Rule"
 				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
+				Arch="10"
+				Emulation="true"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"

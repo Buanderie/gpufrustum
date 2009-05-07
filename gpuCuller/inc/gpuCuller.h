@@ -152,7 +152,7 @@ void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* p
 	@return 0 if successful or the error code.
 */
 GPUCULLER_API
-GCULint __stdcall gculProcessFrustumCulling( const GCULuint gridSize[ 2 ], const GCULuint blockSize[ 3 ], GCUL_Classification* result );
+GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result );
 
 #ifdef __cplusplus
 }

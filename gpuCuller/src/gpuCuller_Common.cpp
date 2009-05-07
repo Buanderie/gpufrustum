@@ -32,7 +32,7 @@ FrustumType CurrentFrustumType( void )
 {
 	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ] || ArrayStates[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ] )
 	{
-		assert( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ], "Pyramidal and spherical frustums can not be used at the same time." );
+		//assert( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ], "Pyramidal and spherical frustums can not be used at the same time." );
 
 		return FRUSTUMTYPE_PYRAMIDAL;
 	}
@@ -49,7 +49,7 @@ BoundingVolumeType CurrentBoundingVolumeType( void )
 {
 	if( ArrayStates[ GCUL_BBOXES_ARRAY ] )
 	{
-		assert( ArrayStates[ GCUL_BSPHERES_ARRAY ], "Boxes and spheres bounding volumes can not be used at the same time." );
+		//assert( ArrayStates[ GCUL_BSPHERES_ARRAY ], "Boxes and spheres bounding volumes can not be used at the same time." );
 
 		return BOUNDINGVOLUMETYPE_BOX;
 	}

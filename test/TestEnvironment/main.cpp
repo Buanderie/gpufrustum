@@ -16,6 +16,7 @@ using namespace std;
 ///////////////// Variables Globales ///////////////////////
 glCamera* cam;
 vector<glPyramidalFrustum> frustumList;
+vector<glAABB> aabbList;
 ////////////////////////////////////////////////////////////
 
 int main()
@@ -51,18 +52,27 @@ int main()
 	cam->m_PitchDegrees = 0.0f;
 	cam->m_HeadingDegrees = 0.0f;
 	
-	generateRandomPyrFrustums(	10000,
+	generateRandomPyrFrustums(	100,
 								45, 90,
 								1, 2,
-								5, 10,
+								5, 50,
 								3.0f/4.0f, 3.0f/4.0f,
-								-1000, 1000,
+								-200, 200,
 								0, 0,
-								-1000, 1000,
+								-200, 200,
 								0, 0,
 								-180, 180,
 								0, 0,
 								frustumList );
+	generateRandomAABBs(	2000,
+							1.0f, 5.0f,
+							1.0f, 5.0f,
+							1.0f, 5.0f,
+							-200, 200,
+							0, 0,
+							-200, 200,
+							aabbList
+							);
 
     // Start game loop
     while (App.IsOpened())
@@ -127,11 +137,27 @@ int main()
 			frustumList[i].draw();
 
 		//Display an AABB
-		glAABB a(glVector4f(0,0,0,0), glVector4f(1,1,1,1));
-		a.draw();
+		for(int i = 0; i < aabbList.size(); ++i )
+			aabbList[i].draw();
 
         // Finally, display rendered frame on screen
         App.Display();
+
+		glPyramidalFrustum pol(90.0f, 1.0f, 10.0f, 1.0f, glVector4f(0.0f,0.0f,0.0f,.0f), 0.0f, 0.0f, 0.0f);
+		float* planes = new float[24];
+		float* points = new float[24];
+		float kl[24];
+		float polbak[24];
+
+		pol.extractPlanesData(planes);
+		pol.extractCornersData(points);
+
+		
+		for(int i = 0 ; i < 24; ++i )
+		{
+			kl[i] = planes[i];
+			polbak[i] = points[i];
+		}
 
 		FrameRateCpt.Reset();
     }

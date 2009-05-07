@@ -48,15 +48,15 @@ ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int planeCou
 
 	float p = iplanes[x].a * ipoints[y].x + iplanes[x].b * ipoints[y].y + iplanes[x].c * ipoints[y].z + iplanes[x].d;
 
-	//FRONT
+	//BACK
 	if( p >= 0 )
 	{
-		out[ planeCount * y + x ] = 1;
+		out[ planeCount * y + x ] = -1;
 		return;
 	}
-	else // BACK
+	else //FRONT
 	{
-		out[ planeCount * y + x ] = -1;
+		out[ planeCount * y + x ] = 1;
 		return;
 	}
 }
@@ -130,7 +130,8 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 	if( arrayCountEight == 6 )
 	{
 		// All points are inside.
-		out[ outIndex ] = 1; // GCU_INSIDE
+		out[ 0 ] = 1; // GCU_INSIDE
+		return;
 	}
 	else
 	{

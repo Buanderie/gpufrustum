@@ -52,6 +52,6 @@ void FreeDeviceMemory( GCULvoid* memory );
 
 int SizeInBytes( GCUL_ArrayDataType type );
 
-int ProcessPyramidalFrustumAABBoxCulling( const GCULuint gridSize[ 2 ], const GCULuint blockSize[ 3 ], GCUL_Classification* result );
+int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result );
 
 #endif // __GPUCULLER_INTERNAL_H__

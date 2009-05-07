@@ -169,68 +169,6 @@ void glPyramidalFrustum::fromModelViewMatrix( float* mat, glPyramidalFrustum& fr
 	ExtractPlane(frustum.m_Up, mat, -2);
 	ExtractPlane(frustum.m_Near, mat, 3);
 	ExtractPlane(frustum.m_Far, mat, -3);
-	
-/*frustum.m_Left.m_Normal.x = mat[12] + mat[0];
-frustum.m_Left.m_Normal.y = mat[13] + mat[1];
-frustum.m_Left.m_Normal.z = mat[14] + mat[2];
-frustum.m_Left.m_Normal.w = mat[15] + mat[3];
-// Right clipping plane
-frustum.m_Right.m_Normal.x = mat[12] - mat[0];
-frustum.m_Right.m_Normal.y = mat[13] - mat[1];
-frustum.m_Right.m_Normal.z = mat[14] - mat[2];
-frustum.m_Right.m_Normal.w = mat[15] - mat[3];
-// Top clipping plane
-frustum.m_Up.m_Normal.x = mat[12] - mat[4];
-frustum.m_Up.m_Normal.y = mat[13] - mat[5];
-frustum.m_Up.m_Normal.z = mat[14] - mat[6];
-frustum.m_Up.m_Normal.w = mat[15] - mat[7];
-// Bottom clipping plane
-frustum.m_Down.m_Normal.x = mat[12] + mat[4];
-frustum.m_Down.m_Normal.y = mat[13] + mat[5];
-frustum.m_Down.m_Normal.z = mat[14] + mat[6];
-frustum.m_Down.m_Normal.w = mat[15] + mat[7];
-// Near clipping plane
-frustum.m_Near.m_Normal.x = mat[12] + mat[8];
-frustum.m_Near.m_Normal.y = mat[13] + mat[9];
-frustum.m_Near.m_Normal.z = mat[14] + mat[10];
-frustum.m_Near.m_Normal.w = mat[15] + mat[11];
-// Far clipping plane
-frustum.m_Far.m_Normal.x = mat[12] - mat[8];
-frustum.m_Far.m_Normal.y = mat[13] - mat[9];
-frustum.m_Far.m_Normal.z = mat[14] - mat[10];
-frustum.m_Far.m_Normal.w = mat[15] - mat[11];
-*/
-	
-	/*    frustum.m_Left.m_Normal.x = mat[3] + mat[0];
-        frustum.m_Left.m_Normal.y = mat[7] + mat[4];
-        frustum.m_Left.m_Normal.z = mat[11] + mat[8];
-        frustum.m_Left.m_Normal.w = mat[15] + mat[12];
-
-        frustum.m_Right.m_Normal.x = mat[3] - mat[0];
-        frustum.m_Right.m_Normal.y = mat[7] - mat[4];
-        frustum.m_Right.m_Normal.z = mat[11] - mat[8];
-        frustum.m_Right.m_Normal.w = mat[15] - mat[12];
-
-        frustum.m_Down.m_Normal.x = mat[3] + mat[1];
-        frustum.m_Down.m_Normal.y = mat[7] + mat[5];
-        frustum.m_Down.m_Normal.z = mat[11] + mat[9];
-        frustum.m_Down.m_Normal.w = mat[15] + mat[13];
-
-        frustum.m_Up.m_Normal.x = mat[3] - mat[1];
-        frustum.m_Up.m_Normal.y = mat[7] - mat[5];
-        frustum.m_Up.m_Normal.z = mat[11] - mat[9];
-        frustum.m_Up.m_Normal.w = mat[15] - mat[13];
-
-        frustum.m_Near.m_Normal.x = mat[3] + mat[2];
-        frustum.m_Near.m_Normal.y = mat[7] + mat[6];
-        frustum.m_Near.m_Normal.z = mat[11] + mat[10];
-        frustum.m_Near.m_Normal.w = mat[15] + mat[14];
-
-        frustum.m_Far.m_Normal.x = mat[3] - mat[2];
-        frustum.m_Far.m_Normal.y = mat[7] - mat[6];
-        frustum.m_Far.m_Normal.z = mat[11] - mat[10];
-        frustum.m_Far.m_Normal.w = mat[15] - mat[14];
-		*/
 }
 
 void glPyramidalFrustum::fromModelViewMatrix( glMatrix4f& mat, glPyramidalFrustum& frustum )
@@ -359,35 +297,35 @@ void glPyramidalFrustum::draw()
 
 void glPyramidalFrustum::extractPlanesData( float* out )
 {
-	out[0] = m_Near.m_Normal[0];
-	out[1] = m_Near.m_Normal[1];
-	out[2] = m_Near.m_Normal[2];
-	out[3] = m_Near.m_Normal[3];
+	out[0] = m_Near.m_Normal.x;
+	out[1] = m_Near.m_Normal.y;
+	out[2] = m_Near.m_Normal.z;
+	out[3] = m_Near.m_Normal.w;
 
-	out[4] = m_Far.m_Normal[0];
-	out[5] = m_Far.m_Normal[1];
-	out[6] = m_Far.m_Normal[2];
-	out[7] = m_Far.m_Normal[3];
+	out[4] = m_Far.m_Normal.x;
+	out[5] = m_Far.m_Normal.y;
+	out[6] = m_Far.m_Normal.z;
+	out[7] = m_Far.m_Normal.w;
 
-	out[8] = m_Left.m_Normal[0];
-	out[9] = m_Left.m_Normal[1];
-	out[10] = m_Left.m_Normal[2];
-	out[11] = m_Left.m_Normal[3];
+	out[8] = m_Left.m_Normal.x;
+	out[9] = m_Left.m_Normal.y;
+	out[10] = m_Left.m_Normal.z;
+	out[11] = m_Left.m_Normal.w;
 
-	out[12] = m_Right.m_Normal[0];
-	out[13] = m_Right.m_Normal[1];
-	out[14] = m_Right.m_Normal[2];
-	out[15] = m_Right.m_Normal[3];
+	out[12] = m_Right.m_Normal.x;
+	out[13] = m_Right.m_Normal.y;
+	out[14] = m_Right.m_Normal.z;
+	out[15] = m_Right.m_Normal.w;
 
-	out[16] = m_Up.m_Normal[0];
-	out[17] = m_Up.m_Normal[1];
-	out[18] = m_Up.m_Normal[2];
-	out[19] = m_Up.m_Normal[3];
+	out[16] = m_Up.m_Normal.x;
+	out[17] = m_Up.m_Normal.y;
+	out[18] = m_Up.m_Normal.z;
+	out[19] = m_Up.m_Normal.w;
 
-	out[20] = m_Down.m_Normal[0];
-	out[21] = m_Down.m_Normal[1];
-	out[22] = m_Down.m_Normal[2];
-	out[23] = m_Down.m_Normal[3];
+	out[20] = m_Down.m_Normal.x;
+	out[21] = m_Down.m_Normal.y;
+	out[22] = m_Down.m_Normal.z;
+	out[23] = m_Down.m_Normal.w;
 }
 
 void glPyramidalFrustum::extractCornersData( float* out )
