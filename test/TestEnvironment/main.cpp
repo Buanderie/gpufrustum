@@ -4,6 +4,8 @@
 #include <vector>
 #include <SFML/Window.hpp>
 
+#include <gpuCuller.h>
+
 #include "rendering.h"
 #include "glCamera.h"
 #include "glPoint.h"
@@ -17,12 +19,13 @@ using namespace std;
 glCamera* cam;
 vector<glPyramidalFrustum> frustumList;
 vector<glAABB> aabbList;
+GCUL_Classification* gculResults;
 ////////////////////////////////////////////////////////////
 
-int main()
+int main(int argc, char** argv)
 {
     //Create the main window
-	sf::Window App(sf::VideoMode::GetDesktopMode(), "gpuCuller Demo");
+	sf::Window App(sf::VideoMode::GetDesktopMode(), string("gpuCuller Demo"));
 
     //Create a clock for measuring time elapsed
     sf::Clock Clock;
@@ -52,31 +55,83 @@ int main()
 	cam->m_PitchDegrees = 0.0f;
 	cam->m_HeadingDegrees = 0.0f;
 	
-	generateRandomPyrFrustums(	100,
+	int nFrustum = 50;
+	int nAABB = 512;
+
+	generateRandomPyrFrustums(	nFrustum,
 								45, 90,
 								1, 2,
 								5, 50,
 								3.0f/4.0f, 3.0f/4.0f,
-								-200, 200,
+								-100, 100,
 								0, 0,
-								-200, 200,
+								-100, 100,
 								0, 0,
 								-180, 180,
 								0, 0,
 								frustumList );
-	generateRandomAABBs(	2000,
+	generateRandomAABBs(	nAABB,
 							1.0f, 5.0f,
 							1.0f, 5.0f,
 							1.0f, 5.0f,
-							-200, 200,
+							-100, 100,
 							0, 0,
-							-200, 200,
+							-100, 100,
 							aabbList
 							);
+
+	//gpuCuller
+	float* frustumPlanesData = new float[nFrustum*24];
+	float* frustumCornersData = new float[nFrustum*24];
+	float* aabbCornersData = new float[nAABB*24];
+	getFrustumPlanesArray( frustumList, frustumPlanesData );
+	getFrustumPlanesArray( frustumList, frustumCornersData );
+	getAABBCornersArray( aabbList, aabbCornersData );
+
+	//Initialize gpuCuller
+	gculInitialize( argc, argv );
+	gculDisableArray( GCUL_SPHERICALFRUSTUM_ARRAY );
+	gculDisableArray( GCUL_BSPHERES_ARRAY );
+
+	//Initialize data	
+	//Add n frustum
+	gculEnableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
+	gculEnableArray( GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+	gculPyramidalFrustumCornersPointer( nFrustum, GCUL_FLOAT,frustumCornersData );
+	gculPyramidalFrustumPlanesPointer( nFrustum, GCUL_FLOAT, frustumPlanesData );
+	
+	//Add m AABB
+	gculEnableArray( GCUL_BBOXES_ARRAY );
+	gculBoxesPointer( nAABB, GCUL_FLOAT, aabbCornersData );
+
+	//Prepare output
+	gculResults = new GCUL_Classification[nFrustum * nAABB];
+	//
+
 
     // Start game loop
     while (App.IsOpened())
     {
+		//Frustum Culling
+		Clock.Reset();
+		gculProcessFrustumCulling( gculResults );
+		float t = Clock.GetElapsedTime();
+		float cullingpersecond = ((float)(nFrustum*nAABB))/t;
+		printf("t=%f seconds\n", t);
+
+		for(int i = 0; i < nAABB; ++i)
+		{
+			for(int j = 0; j < nFrustum; ++j)
+			{
+				if( gculResults[nFrustum*i + j] == GCUL_INSIDE || gculResults[nFrustum*i + j] == GCUL_SPANNING )
+					aabbList[i].isInsideFrustum = true;
+				//printf("%d ", gculResults[nFrustum*i +j]);
+			}
+			//printf("\r\n");
+		}
+		//
+
+
         // Process events
         sf::Event Event;
         while (App.GetEvent(Event))
@@ -142,22 +197,6 @@ int main()
 
         // Finally, display rendered frame on screen
         App.Display();
-
-		glPyramidalFrustum pol(90.0f, 1.0f, 10.0f, 1.0f, glVector4f(0.0f,0.0f,0.0f,.0f), 0.0f, 0.0f, 0.0f);
-		float* planes = new float[24];
-		float* points = new float[24];
-		float kl[24];
-		float polbak[24];
-
-		pol.extractPlanesData(planes);
-		pol.extractCornersData(points);
-
-		
-		for(int i = 0 ; i < 24; ++i )
-		{
-			kl[i] = planes[i];
-			polbak[i] = points[i];
-		}
 
 		FrameRateCpt.Reset();
     }

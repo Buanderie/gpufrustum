@@ -35,7 +35,7 @@
 				Name="CUDA Build Rule"
 				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
 				Arch="10"
-				Emulation="true"
+				Emulation="false"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -48,6 +48,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/DEBUG"
 				Optimization="0"
 				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
 				PreprocessorDefinitions="WIN32;_WINDOWS;DLL"

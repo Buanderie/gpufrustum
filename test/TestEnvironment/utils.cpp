@@ -57,3 +57,27 @@ void generateRandomAABBs(	int n,
 		list.push_back( a );
 	}
 }
+
+void getFrustumPlanesArray( std::vector<glPyramidalFrustum>& list, float* a )
+{
+	for(int i = 0; i < list.size(); ++i )
+	{
+		list[i].extractPlanesData(a + i*24);
+	}
+}
+
+void getFrustumCornersArray( std::vector<glPyramidalFrustum>& list, float* a )
+{
+	for(int i = 0; i < list.size(); ++i )
+	{
+		list[i].extractCornersData(a + i*24);
+	}
+}
+
+void getAABBCornersArray( std::vector<glAABB> list, float* a )
+{
+	for(int i = 0; i < list.size(); ++i )
+	{
+		list[i].extractCornersData(a + i*24);
+	}
+}

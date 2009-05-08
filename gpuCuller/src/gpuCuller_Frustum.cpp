@@ -182,7 +182,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	FreeDeviceMemory( frustumsPlanes );
 
 	//Debug stuff
-	int* h_odata = new int[(frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)];
+	/*int* h_odata = new int[(frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)];
 	cutilSafeCall( cudaMemcpy( h_odata, pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)*sizeof(int),
                                 cudaMemcpyDeviceToHost) );
 	//for each point
@@ -194,7 +194,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 			printf("%d ", h_odata[i*frustumPlanesInfo.size*6 + j]);		
 		}
 		printf("\r\n");
-	}
+	}*/
 	//
 
 	//--------------------
@@ -245,8 +245,8 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	}
 	//
 
-	dim3 dimBlock2ndPass(2, 2);
-	dim3 dimGrid2ndPass(1, 1);
+	dim3 dimBlock2ndPass(blockDimX, blockDimY);
+	dim3 dimGrid2ndPass(gridDimX, gridDimY);
 
 	// Process second pass : determine from first pass output the intersection between each frustum with each box.
 	ClassifyPyramidalFrustumBoxes( 

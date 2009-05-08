@@ -13,6 +13,8 @@ public:
 	glAABB(glVector4f minPos, glVector4f maxPos);
 	glAABB(const glAABB& val);
 	void draw();
+	void extractCornersData( float* out );
+	bool isInsideFrustum;
 };
 
 #endif

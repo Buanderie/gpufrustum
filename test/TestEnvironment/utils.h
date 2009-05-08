@@ -29,4 +29,8 @@ void generateRandomAABBs(	int n,
 							std::vector<glAABB>& list
 							);
 
+void getFrustumPlanesArray( std::vector<glPyramidalFrustum>& list, float* a );
+void getFrustumCornersArray( std::vector<glPyramidalFrustum> list, float* a );
+void getAABBCornersArray( std::vector<glAABB> list, float* a );
+
 #endif

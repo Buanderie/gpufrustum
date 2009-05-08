@@ -119,9 +119,7 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 			int offsetX = 6 * blockIdx.x;
 			int offsetY = blockIdx.y * 8 * gridWidth;
 			int index = offsetX + offsetY + gridWidth*j + i;
-#ifdef DEBUG
-			printf("lol=%d\ -- mdr=%dr\n", index, planePointClassification[ index ]);
-#endif
+			//printf("lol=%d\ -- mdr=%dr\n", index, planePointClassification[ index ]);
 			sums[ i ] += planePointClassification[ index ];
 		}
 	}
