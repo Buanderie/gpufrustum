@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <gpuCuller_kernel.h>
-#include <gpuCuller_internal.h>
 #include <cutil_inline.h>
 
 void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, int* out )
 {
 	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 3 ) * sizeof( float );
 
-	ClassifyPlanesPoints<<< gridSize, blockSize >>>( ( plane* )iplanes, ( point3d* )ipoints, nPlane, nPoint, out );
+	ClassifyPlanesPoints<<< gridSize, blockSize, sizeOfSharedMemory >>>( ( float4* )iplanes, ( float3* )ipoints, nPlane, nPoint, out );
 
 	check_cuda_error();
 }
@@ -35,103 +34,92 @@ void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* 
 	m = point count - 1.
 */
 __global__ void
-ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int planeCount, int pointCount, int* out )
+ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCount, int pointCount, int* out )
 {
-//	//On recupere l'indice du resultat de classification dans la matrice resultat
-//	int x = blockIdx.x * blockDim.x + threadIdx.x;
-//	int y = blockIdx.y * blockDim.y + threadIdx.y;
-//
-//	//Si le thread travaille en dehors des dimensions de la matrice, on ne fait rien
-//	if( x >= planeCount || y >= pointCount )
-//	{
-//		return;
-//	}
-//
-//	// Shared memory used to read input data.
-//	// Shared memory is only used by same block threads. 
-//	// * 0 to m   = planes
-//	// * n+1 to n = points 
-//	// The size of this array must be number_of_threads_per_block * sizeof( float ).
-//	/*extern __shared__ float sharedMemory[];
-//
-//	float4* sharedPlanes = ( float4* )&sharedMemory[ 0			    ];
-//	float3* sharedPoints = ( float3* )&sharedMemory[ blockDim.x * 4 ];
-//
-//	int planeShIndex = threadIdx.x;	// offset to the first coordinate of the plane.
-//	int pointShIndex = threadIdx.y;	// offset to the first coordinate of the point.
-//
-//	sharedPlanes[ planeShIndex ] = iplanes[ x ];
-//
-//	sharedPoints[ pointShIndex ] = ipoints[ y ];*/
-//
-//	// Only threads which are owned by the first row and the first column load data.
-//	/*if( threadIdx.x == 0 && threadIdx.y == 0 )
-//	{
-//		// Load the 1st plane and the 1st point
-//		sharedMemory[ 0 ] = iplanes[ x ].x;
-//		sharedMemory[ 1 ] = iplanes[ x ].y;
-//		sharedMemory[ 2 ] = iplanes[ x ].z;
-//		sharedMemory[ 3 ] = iplanes[ x ].w;
-//
-//		sharedMemory[ pointOffset	  ] = ipoints[ y ].x;
-//		sharedMemory[ pointOffset + 1 ] = ipoints[ y ].y;
-//		sharedMemory[ pointOffset + 2 ] = ipoints[ y ].z;
-//	}
-//	else if( threadIdx.x == 0 )
-//	{
-//		// Load the n-th point
-//		sharedMemory[ pointShIndex	   ] = ipoints[ y ].x;
-//		sharedMemory[ pointShIndex + 1 ] = ipoints[ y ].y;
-//		sharedMemory[ pointShIndex + 2 ] = ipoints[ y ].z;
-//	}
-//	else if( threadIdx.y == 0 )
-//	{
-//		// Load the n-th planes
-//		sharedMemory[ planeShIndex     ] = iplanes[ x ].x;
-//		sharedMemory[ planeShIndex + 1 ] = iplanes[ x ].y;
-//		sharedMemory[ planeShIndex + 2 ] = iplanes[ x ].z;
-//		sharedMemory[ planeShIndex + 3 ] = iplanes[ x ].w;
-//	}*/
-//	
-//	// Wait all reading thread.
-//	//__syncthreads();
-//
-//	// Compute the multiplication between the point and the plane.
-//	// P = <N.Pt> + D
-//	/*float p2 =	sharedPlanes[ planeShIndex ].x * sharedPoints[ pointShIndex ].x + 
-//				sharedPlanes[ planeShIndex ].y * sharedPoints[ pointShIndex ].y + 
-//				sharedPlanes[ planeShIndex ].z * sharedPoints[ pointShIndex ].z + 
-//				sharedPlanes[ planeShIndex ].w;*/
-//
-//	int outIndex = planeCount * y + x;
-//
-//	float p = iplanes[x].x * ipoints[y].x + iplanes[x].y * ipoints[y].y + iplanes[x].z * ipoints[y].z + iplanes[x].w;
-//	
-//	/*if( p != p2 )
-//	{
-//		p = 1234567890;
-//	}*/
-//
-//
-//	//BACK
-//	if( p >= 0 )
-//	{
-//		out[ outIndex ] = -1;
-//	}
-//	else //FRONT
-//	{
-//		out[ outIndex ] = 1;
-//	}
-
-	//printf( "%d %d\n", x, y );
-
 	//On recupere l'indice du resultat de classification dans la matrice resultat
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
 
 	//Si le thread travaille en dehors des dimensions de la matrice, on ne fait rien
 	if( x >= planeCount || y >= pointCount )
+	{
 		return;
+	}
+
+	// Shared memory used to read input data.
+	// Shared memory is only used by same block threads. 
+	// * 0 to m   = planes
+	// * n+1 to n = points 
+	// The size of this array must be number_of_threads_per_block * sizeof( float ).
+	extern __shared__ float sharedMemory[];
+
+	float4* sharedPlanes = ( float4* )&sharedMemory[ 0			    ];
+	float3* sharedPoints = ( float3* )&sharedMemory[ blockDim.x * 4 ];
+
+	int planeShIndex = threadIdx.x;	// offset to the first coordinate of the plane.
+	int pointShIndex = threadIdx.y;	// offset to the first coordinate of the point.
+
+	//sharedPlanes[ planeShIndex ] = iplanes[ x ];
+
+	//sharedPoints[ pointShIndex ] = ipoints[ y ];
+
+	// Only threads which are owned by the first row and the first column load data.
+	if( threadIdx.x == 0 && threadIdx.y == 0 )
+	{
+		// Load the 1st plane and the 1st point
+		sharedPlanes[ 0 ] = iplanes[ x ];
+		sharedPoints[ 0 ] = ipoints[ y ];
+	}
+	else if( threadIdx.x == 0 )
+	{
+		// Load the n-th point
+		sharedPoints[ pointShIndex ] = ipoints[ y ];
+	}
+	else if( threadIdx.y == 0 )
+	{
+		// Load the n-th planes
+		sharedPlanes[ planeShIndex ] = iplanes[ x ];
+	}
+	
+	// Wait all reading thread.
+	__syncthreads();
+
+	// Compute the multiplication between the point and the plane.
+	// P = <N.Pt> + D
+	float p =	sharedPlanes[ planeShIndex ].x * sharedPoints[ pointShIndex ].x + 
+				sharedPlanes[ planeShIndex ].y * sharedPoints[ pointShIndex ].y + 
+				sharedPlanes[ planeShIndex ].z * sharedPoints[ pointShIndex ].z + 
+				sharedPlanes[ planeShIndex ].w;
+
+	int outIndex = planeCount * y + x;
+
+	//float p = iplanes[x].x * ipoints[y].x + iplanes[x].y * ipoints[y].y + iplanes[x].z * ipoints[y].z + iplanes[x].w;
+	
+	/*if( p != p2 )
+	{
+		p = 1234567890;
+	}*/
+
+
+	//BACK
+	if( p >= 0 )
+	{
+		out[ outIndex ] = -1;
+	}
+	else //FRONT
+	{
+		out[ outIndex ] = 1;
+	}
+
+	//printf( "%d %d\n", x, y );
+
+	//On recupere l'indice du resultat de classification dans la matrice resultat
+	//int x = blockIdx.x * blockDim.x + threadIdx.x;
+	//int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	////Si le thread travaille en dehors des dimensions de la matrice, on ne fait rien
+	//if( x >= planeCount || y >= pointCount )
+	//	return;
 
 	/*
 	//Transfert Global Memory -> Shared Memory
@@ -143,7 +131,7 @@ ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int planeCou
 	__shared__ float sout[BLOCK_SIZE][BLOCK_SIZE];
 	*/
 
-	float p = iplanes[x].a * ipoints[y].x + iplanes[x].b * ipoints[y].y + iplanes[x].c * ipoints[y].z + iplanes[x].d;
+	/*float p = iplanes[x].x * ipoints[y].x + iplanes[x].y * ipoints[y].y + iplanes[x].z * ipoints[y].z + iplanes[x].w;
 
 	//BACK
 	if( p >= 0 )
@@ -155,7 +143,7 @@ ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int planeCou
 	{
 		out[ planeCount * y + x ] = 1;
 		return;
-	}
+	}*/
 }
 
 /**

@@ -36,8 +36,8 @@ void PyrFrustumConstGenerator::Generate( unsigned int count, float* data )
 
 		int cornerOffset = count * 6 * 4;
 
-		frustum.extractPlanesData ( &data[				  i * 6 * 4 ] );
-		frustum.extractCornersData( &data[ cornerOffset + i * 8 * 4 ] );
+		frustum.extractPlanesData ( &data[ 0			] );
+		frustum.extractCornersData( &data[ cornerOffset ] );
 	}
 }
 

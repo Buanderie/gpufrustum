@@ -55,8 +55,8 @@ int main(int argc, char** argv)
 	cam->m_PitchDegrees = 0.0f;
 	cam->m_HeadingDegrees = 0.0f;
 	
-	int nFrustum = 50;
-	int nAABB = 512;
+	int nFrustum = 124;
+	int nAABB = 357;
 
 	srand( 1 );
 
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 		float cullingpersecond = ((float)(nFrustum*nAABB))/t;
 
 		printf("t=%f seconds\n", t);
-
+ 
 		for(int i = 0; i < nAABB; ++i)
 		{
 			for(int j = 0; j < nFrustum; ++j)

@@ -4,6 +4,9 @@
 
 extern ArrayInfo ArrayInfos[ GCUL_END_ARRAY ];
 
+extern DeviceFunctionEnv ClassifyPlanesPointsEnv;
+extern DeviceFunctionEnv ClassifyPyramidalFrustumBoxesEnv;
+
 #define ARRAY_ASSERT()	assert( pointer != NULL,	"Null pointer detected." ); \
 						assert( type == GCUL_INT	|| \
 								type ==	GCUL_FLOAT  || \
@@ -137,7 +140,15 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	dim3 dimBlock1stPass;
 	dim3 dimGrid1stPass;
 
-	ComputeGridSizes( planeCount, pointCount, dimGrid1stPass.x, dimGrid1stPass.y, dimBlock1stPass.x, dimBlock1stPass.y );
+	ComputeGridSizes( 
+		planeCount, 
+		pointCount, 
+		ClassifyPlanesPointsEnv,
+		dimGrid1stPass.x, 
+		dimGrid1stPass.y, 
+		dimBlock1stPass.x, 
+		dimBlock1stPass.y 
+	);
 
 	// Process first pass : intersect each plane with each box point.
 	ClassifyPlanesPoints( 
@@ -154,7 +165,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	FreeDeviceMemory( frustumsPlanes );
 
 	//Debug stuff
-	int* h_odata = new int[(frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)];
+	/*int* h_odata = new int[(frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)];
 	cutilSafeCall( cudaMemcpy( h_odata, pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)*sizeof(int),
                                 cudaMemcpyDeviceToHost) );
 	//for each point
@@ -172,7 +183,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		}
 		//printf("\r\n");
 	}
-	delete[] h_odata;
+	delete[] h_odata;*/
 	//
 
 	//--------------------
@@ -205,7 +216,15 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	int frustumCount	= frustumPlanesInfo.size;
 	int boxCount		= boundingBoxesInfo.size;
 
-	ComputeGridSizes( frustumCount, boxCount, dimGrid2ndPass.x, dimGrid2ndPass.y, dimBlock2ndPass.x, dimBlock2ndPass.y );
+	ComputeGridSizes( 
+		frustumCount, 
+		boxCount, 
+		ClassifyPyramidalFrustumBoxesEnv,
+		dimGrid2ndPass.x, 
+		dimGrid2ndPass.y, 
+		dimBlock2ndPass.x, 
+		dimBlock2ndPass.y 
+	);
 
 	// Process second pass : determine from first pass output the intersection between each frustum with each box.
 	ClassifyPyramidalFrustumBoxes( 

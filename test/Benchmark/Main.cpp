@@ -7,10 +7,10 @@
 int main( int argc, char** argv )
 {
 	float	worldDim		= 1000.f;
-	int		frustumCount	= 200;
-	int		boxCount		= 600;
-	int		testCount		= 100;
-	float	totalDuration	= 0.f;
+	int		frustumCount	= 1;
+	int		maxBoxCount		= 5000;
+	int		testCount		= 500;
+	int		testCount2		= 10;
 
 	Bench::PyrFrustumConstGenerator frustumGenerator( worldDim, worldDim );
 	Bench::AABoxConstGenerator		boxGenerator	( worldDim, worldDim );
@@ -23,44 +23,48 @@ int main( int argc, char** argv )
 	int cornerSize	=  frustumCount * 8 * 4; 
 
 	float* frustumData	= new float[ planeSize + cornerSize ];
-	float* boxData		= new float[ boxCount * 8 * 4 ];
-
-	GCUL_Classification* result = new GCUL_Classification[ boxCount * frustumCount ];
+	float* boxData		= new float[ maxBoxCount * 8 * 4    ];
 
 	gculInitialize( argc, argv );
 
-	for( int i = 0; i < testCount ; ++i )
+	for( int j = 1; j < testCount + 1; ++j )
 	{
-		frustumGenerator.Generate( 200, frustumData );
+		int boxCount = int( ( float)maxBoxCount / testCount ) * j;
 
-		boxGenerator.Generate( boxCount, boxData );
+		GCUL_Classification* result = new GCUL_Classification[ boxCount * frustumCount ];
 
-		gculBoxesPointer( boxCount, GCUL_FLOAT, boxData );
+		float totalDuration	= 0.f;
 
-		gculPyramidalFrustumPlanesPointer ( frustumCount, GCUL_FLOAT, frustumData							);
-		gculPyramidalFrustumCornersPointer( frustumCount, GCUL_FLOAT, &frustumData[ frustumCount * 6 * 4 ]	);
+		for( int i = 0; i < testCount2; ++i )
+		{
+			frustumGenerator.Generate( frustumCount, frustumData );
 
-		gculEnableArray( GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
-		gculEnableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY	);
+			boxGenerator.Generate( boxCount, boxData );
 
-		gculEnableArray( GCUL_BBOXES_ARRAY );
+			gculBoxesPointer( boxCount, GCUL_FLOAT, boxData );
 
-		sf::Clock timer; timer.Reset();
+			gculPyramidalFrustumPlanesPointer ( frustumCount, GCUL_FLOAT, frustumData							);
+			gculPyramidalFrustumCornersPointer( frustumCount, GCUL_FLOAT, &frustumData[ frustumCount * 6 * 4 ]	);
 
-		gculProcessFrustumCulling( result );
+			gculEnableArray( GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+			gculEnableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY	);
 
-		float duration = timer.GetElapsedTime();
+			gculEnableArray( GCUL_BBOXES_ARRAY );
 
-		totalDuration += duration;
+			sf::Clock timer; timer.Reset();
 
-		std::cout<< "Culling duration = " << duration << std::endl;
+			gculProcessFrustumCulling( result );
+
+			float duration = timer.GetElapsedTime();
+
+			totalDuration += duration;
+		}
+
+		std::cout<< boxCount << "," << totalDuration / testCount2 << std::endl;
+
+		delete[] result;
 	}
-
-	std::cout<< "Average duration = " << totalDuration / testCount << std::endl;
 
 	delete[] boxData;
 	delete[] frustumData;
-	delete[] result;
-
-	//system( "pause" );
 }

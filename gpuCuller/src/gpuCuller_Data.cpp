@@ -17,3 +17,15 @@ ArrayInfo ArrayInfos[ GCUL_END_ARRAY ] =
 	UndefinedArrayInfo( 24 ),	// GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY	24 = 8 corners * 3 coordinates
 	UndefinedArrayInfo(  4 )	// GCU_SPHERICALFRUSTUM_ARRAY			 4 = 1 center * 3 coordinates + 1 radius
 };
+
+DeviceFunctionEnv ClassifyPlanesPointsEnv =
+{
+	9,
+	36
+};
+
+extern DeviceFunctionEnv ClassifyPyramidalFrustumBoxesEnv =
+{
+	29,
+	40
+};

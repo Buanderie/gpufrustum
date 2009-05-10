@@ -18,5 +18,35 @@
   <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
   <datetime>09 May 2009 21:56:11</datetime>
  </session>
+ <session>
+  <name>Session4</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>10 May 2009 19:28:49</datetime>
+ </session>
+ <session>
+  <name>Session5</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>10 May 2009 19:29:17</datetime>
+ </session>
+ <session>
+  <name>Session6</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>10 May 2009 19:34:38</datetime>
+ </session>
+ <session>
+  <name>Session7</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>10 May 2009 19:38:40</datetime>
+ </session>
+ <session>
+  <name>Session8</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>10 May 2009 19:42:02</datetime>
+ </session>
 </cpj>
 

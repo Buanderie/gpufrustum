@@ -12,7 +12,7 @@
 #endif
 
 #ifdef _DEBUG
-	#define check_cuda_error( ) cudaError_t err = cudaGetLastError(); assert( cudaSuccess == err, "Cuda error " +  cudaGetErrorString( err ) )
+	#define check_cuda_error( ) cudaError_t err = cudaGetLastError(); assert( cudaSuccess == err, cudaGetErrorString( err ) )
 #else
 	#define check_cuda_error( ) 
 #endif
@@ -40,6 +40,12 @@ enum BoundingVolumeType
 	BOUNDINGVOLUMETYPE_UNDEFINED
 };
 
+struct DeviceFunctionEnv
+{
+	unsigned int registerPerThread;
+	unsigned int sharedMemorySize;
+};
+
 //--------------------
 // Functions
 //--------------------
@@ -60,6 +66,6 @@ int SizeInBytes( GCUL_ArrayDataType type );
 
 int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result );
 
-void ComputeGridSizes( int threadWidth, int threadHeight, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY );
+void ComputeGridSizes( int threadWidth, int threadHeight, const DeviceFunctionEnv& functionEnv, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY );
 
 #endif // __GPUCULLER_INTERNAL_H__
