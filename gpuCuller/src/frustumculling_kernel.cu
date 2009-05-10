@@ -1,14 +1,22 @@
 #include <stdio.h>
 #include <gpuCuller_kernel.h>
+#include <gpuCuller_internal.h>
+#include <cutil_inline.h>
 
 void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, int* out )
 {
+	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 3 ) * sizeof( float );
+
 	ClassifyPlanesPoints<<< gridSize, blockSize >>>( ( plane* )iplanes, ( point3d* )ipoints, nPlane, nPoint, out );
+
+	check_cuda_error();
 }
 
 void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out )
 {
 	ClassifyPyramidalFrustumBoxes<<< gridSize, blockSize >>>( (point3d*)frustumCorners, (point3d*)boxPoints, planePointClassification, planeCount, pointCount, out );
+
+	check_cuda_error();
 }
 
 /**
@@ -29,6 +37,94 @@ void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* 
 __global__ void
 ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int planeCount, int pointCount, int* out )
 {
+//	//On recupere l'indice du resultat de classification dans la matrice resultat
+//	int x = blockIdx.x * blockDim.x + threadIdx.x;
+//	int y = blockIdx.y * blockDim.y + threadIdx.y;
+//
+//	//Si le thread travaille en dehors des dimensions de la matrice, on ne fait rien
+//	if( x >= planeCount || y >= pointCount )
+//	{
+//		return;
+//	}
+//
+//	// Shared memory used to read input data.
+//	// Shared memory is only used by same block threads. 
+//	// * 0 to m   = planes
+//	// * n+1 to n = points 
+//	// The size of this array must be number_of_threads_per_block * sizeof( float ).
+//	/*extern __shared__ float sharedMemory[];
+//
+//	float4* sharedPlanes = ( float4* )&sharedMemory[ 0			    ];
+//	float3* sharedPoints = ( float3* )&sharedMemory[ blockDim.x * 4 ];
+//
+//	int planeShIndex = threadIdx.x;	// offset to the first coordinate of the plane.
+//	int pointShIndex = threadIdx.y;	// offset to the first coordinate of the point.
+//
+//	sharedPlanes[ planeShIndex ] = iplanes[ x ];
+//
+//	sharedPoints[ pointShIndex ] = ipoints[ y ];*/
+//
+//	// Only threads which are owned by the first row and the first column load data.
+//	/*if( threadIdx.x == 0 && threadIdx.y == 0 )
+//	{
+//		// Load the 1st plane and the 1st point
+//		sharedMemory[ 0 ] = iplanes[ x ].x;
+//		sharedMemory[ 1 ] = iplanes[ x ].y;
+//		sharedMemory[ 2 ] = iplanes[ x ].z;
+//		sharedMemory[ 3 ] = iplanes[ x ].w;
+//
+//		sharedMemory[ pointOffset	  ] = ipoints[ y ].x;
+//		sharedMemory[ pointOffset + 1 ] = ipoints[ y ].y;
+//		sharedMemory[ pointOffset + 2 ] = ipoints[ y ].z;
+//	}
+//	else if( threadIdx.x == 0 )
+//	{
+//		// Load the n-th point
+//		sharedMemory[ pointShIndex	   ] = ipoints[ y ].x;
+//		sharedMemory[ pointShIndex + 1 ] = ipoints[ y ].y;
+//		sharedMemory[ pointShIndex + 2 ] = ipoints[ y ].z;
+//	}
+//	else if( threadIdx.y == 0 )
+//	{
+//		// Load the n-th planes
+//		sharedMemory[ planeShIndex     ] = iplanes[ x ].x;
+//		sharedMemory[ planeShIndex + 1 ] = iplanes[ x ].y;
+//		sharedMemory[ planeShIndex + 2 ] = iplanes[ x ].z;
+//		sharedMemory[ planeShIndex + 3 ] = iplanes[ x ].w;
+//	}*/
+//	
+//	// Wait all reading thread.
+//	//__syncthreads();
+//
+//	// Compute the multiplication between the point and the plane.
+//	// P = <N.Pt> + D
+//	/*float p2 =	sharedPlanes[ planeShIndex ].x * sharedPoints[ pointShIndex ].x + 
+//				sharedPlanes[ planeShIndex ].y * sharedPoints[ pointShIndex ].y + 
+//				sharedPlanes[ planeShIndex ].z * sharedPoints[ pointShIndex ].z + 
+//				sharedPlanes[ planeShIndex ].w;*/
+//
+//	int outIndex = planeCount * y + x;
+//
+//	float p = iplanes[x].x * ipoints[y].x + iplanes[x].y * ipoints[y].y + iplanes[x].z * ipoints[y].z + iplanes[x].w;
+//	
+//	/*if( p != p2 )
+//	{
+//		p = 1234567890;
+//	}*/
+//
+//
+//	//BACK
+//	if( p >= 0 )
+//	{
+//		out[ outIndex ] = -1;
+//	}
+//	else //FRONT
+//	{
+//		out[ outIndex ] = 1;
+//	}
+
+	//printf( "%d %d\n", x, y );
+
 	//On recupere l'indice du resultat de classification dans la matrice resultat
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -100,6 +196,9 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 	if( threadX >= frustumCount || threadY >= boxCount )
 		return;
 
+	// TODO :	load frustum and box data to shared memory if the memory size is appropriate
+	//			or use device memory with a constant acces (to take advantage of the cache memory)
+
 	//--------------------
 	// Step 1 : Sum each 
 	// column
@@ -111,15 +210,15 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 	{
 		sums[ i ] = 0;
 
+		int planeIndex = threadX * 6 + i;
+
 		// For each point.
 		for( int j = 0; j < 8; ++j )
 		{
-			//int index = ( threadX * 6 + i ) + ( ( threadY + j ) * planeCount );
-			int gridWidth = 6 * gridDim.x;
-			int offsetX = 6 * blockIdx.x;
-			int offsetY = blockIdx.y * 8 * gridWidth;
-			int index = offsetX + offsetY + gridWidth*j + i;
-			//printf("lol=%d\ -- mdr=%dr\n", index, planePointClassification[ index ]);
+			int pointIndex = threadY * 8 + j;
+
+			int index = pointIndex * planeCount + planeIndex;
+
 			sums[ i ] += planePointClassification[ index ];
 		}
 	}
@@ -135,7 +234,7 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 	if( arrayCountEight == 6 )
 	{
 		// All points are inside.
-		out[ outIndex ] = 1; // GCU_INSIDE
+		out[ outIndex ] = 0; // GCU_INSIDE
 		return;
 	}
 	else
@@ -145,31 +244,34 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 		if( arrayCountMinusEight > 0 )
 		{
 			// The box is outside to one or several planes.
-			out[ outIndex ] = 3; // GCU_OUTSIDE
+			out[ outIndex ] = 1; // GCU_OUTSIDE
 		}
 		else
 		{
 			int frustumIndex = threadX;
 			int boxIndex	 = threadY;
 
-			bool spanning = false;
+			// Get the upper and lower point of the box.
+			point3d upperBoxPoint = UpperPoint( &boxPoints[ boxIndex ] );
+			point3d lowerBoxPoint = LowerPoint( &boxPoints[ boxIndex ] );
 
+			bool spanning = false; // by default.
+
+			// For each corner of the frustum.
 			for( int p = 0; p < 8; ++p )
 			{
 				int frustumCornerIndex = frustumIndex * 8 + p;
 
 				point3d currentCorner = frustumCorners[ frustumCornerIndex ];
 
-				point3d upperBoxPoint = UpperPoint( &boxPoints[ boxIndex ] );
-				point3d lowerBoxPoint = LowerPoint( &boxPoints[ boxIndex ] );
-
+				// If a frustum corner is outside the box.
 				if( ( lowerBoxPoint.x > currentCorner.x ) || ( currentCorner.x > upperBoxPoint.x )
         			||
         			( lowerBoxPoint.y > currentCorner.y ) || ( currentCorner.y > upperBoxPoint.y )
         			||
         			( lowerBoxPoint.z > currentCorner.z ) || ( currentCorner.x > upperBoxPoint.z ) ) 
 				{
-        			// The box intersects several planes.
+        			// The frustum intersects the box.
 					out[ outIndex ] = 2; // GCU_SPANNING
 
 					spanning = true;
@@ -179,7 +281,7 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 			if( !spanning )
 			{
 				// default case
-				out[ outIndex ] = 0; // GCU_ENCOSING
+				out[ outIndex ] = 3; // GCU_ENCOSING
 			}
 		}
 	}

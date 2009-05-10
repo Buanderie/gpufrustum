@@ -13,7 +13,7 @@ void __stdcall gculPyramidalFrustumPlanesPointer( GCULuint size, GCULenum type, 
 {
 	//--------------------
 	// Pre-conditions
-	//ARRAY_ASSERT();
+	ARRAY_ASSERT();
 	//--------------------
 
 	ArrayInfo* info = &ArrayInfos[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ];
@@ -27,7 +27,7 @@ void __stdcall gculPyramidalFrustumCornersPointer( GCULuint size, GCULenum type,
 {
 	//--------------------
 	// Pre-conditions
-	//ARRAY_ASSERT();
+	ARRAY_ASSERT();
 	//--------------------
 
 	ArrayInfo* info = &ArrayInfos[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ];
@@ -47,7 +47,7 @@ void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* p
 {
 	//--------------------
 	// Pre-conditions
-	//ARRAY_ASSERT();
+	ARRAY_ASSERT();
 	//--------------------
 
 	ArrayInfo* info = &ArrayInfos[ GCUL_BBOXES_ARRAY ];
@@ -130,47 +130,19 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	GCULvoid* pointPlaneIntersection = NULL;
 	cudaMalloc( &pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8) * sizeof( int ));
 
-	//Get some infos from the device and compute Block/Grid sizes
-	cudaDeviceProp deviceProp;
-	cutilSafeCall(cudaGetDeviceProperties(&deviceProp, cutGetMaxGflopsDeviceId()));
-	int maxThreadDimXPerBlock = deviceProp.maxThreadsDim[0];
-	int maxThreadDimYPerBlock = deviceProp.maxThreadsDim[1];
-	int maxGridDimX = deviceProp.maxGridSize[0];
-	int maxGridDimY = deviceProp.maxGridSize[1];
-	int blockDimX; int gridDimX;
-	int blockDimY; int gridDimY;
+	// Compute Block/Grid sizes.
+	int planeCount = frustumPlanesInfo.size * 6;	// six planes per frustum.
+	int pointCount = boundingBoxesInfo.size * 8;	// eight corners per box.
 
-	//
-	if( frustumPlanesInfo.size*6 > maxThreadDimXPerBlock )
-	{
-		blockDimX = maxThreadDimXPerBlock;
-		gridDimX = (int)ceil( (double)(frustumPlanesInfo.size*6)/(double)(maxThreadDimXPerBlock) );
-	}
-	else
-	{
-		blockDimX = frustumPlanesInfo.size*6;
-		gridDimX = 1;
-	}
-	//
-	if( boundingBoxesInfo.size*8 > maxThreadDimYPerBlock )
-	{
-		blockDimY = maxThreadDimYPerBlock;
-		gridDimY = (int)ceil( (double)(boundingBoxesInfo.size*8)/(double)(maxThreadDimYPerBlock) );
-	}
-	else
-	{
-		blockDimY = boundingBoxesInfo.size*8;
-		gridDimY = 1;
-	}
-	//
+	dim3 dimBlock1stPass;
+	dim3 dimGrid1stPass;
 
-	dim3 dimBlock1stPass(blockDimX, blockDimY);
-	dim3 dimGrid1stPass(gridDimX, gridDimY);
+	ComputeGridSizes( planeCount, pointCount, dimGrid1stPass.x, dimGrid1stPass.y, dimBlock1stPass.x, dimBlock1stPass.y );
 
 	// Process first pass : intersect each plane with each box point.
 	ClassifyPlanesPoints( 
-		dimBlock1stPass,
 		dimGrid1stPass,
+		dimBlock1stPass,
 		frustumsPlanes, 
 		boundingBoxes, 
 		frustumPlanesInfo.size * 6, 
@@ -182,7 +154,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	FreeDeviceMemory( frustumsPlanes );
 
 	//Debug stuff
-	/*int* h_odata = new int[(frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)];
+	int* h_odata = new int[(frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)];
 	cutilSafeCall( cudaMemcpy( h_odata, pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)*sizeof(int),
                                 cudaMemcpyDeviceToHost) );
 	//for each point
@@ -191,10 +163,16 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		//for each plane
 		for( int j = 0; j < frustumPlanesInfo.size * 6; ++j )
 		{
-			printf("%d ", h_odata[i*frustumPlanesInfo.size*6 + j]);		
+			if( h_odata[i*frustumPlanesInfo.size*6 + j] != -1 && h_odata[i*frustumPlanesInfo.size*6 + j] != 1 )
+			{
+				int b = 42;
+				//assert( false, "BUUUUG" );
+			}
+			//printf("%d ", h_odata[i*frustumPlanesInfo.size*6 + j]);		
 		}
-		printf("\r\n");
-	}*/
+		//printf("\r\n");
+	}
+	delete[] h_odata;
 	//
 
 	//--------------------
@@ -221,37 +199,18 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	// Initialize input data on device memory.
 	CopyArrayToDeviceMemory( frustumsCorners, frustumCornersInfo );
 
-	//
-	if( frustumPlanesInfo.size > maxThreadDimXPerBlock )
-	{
-		blockDimX = maxThreadDimXPerBlock;
-		gridDimX = (int)ceil( (double)(frustumPlanesInfo.size)/(double)(maxThreadDimXPerBlock) );
-	}
-	else
-	{
-		blockDimX = frustumPlanesInfo.size;
-		gridDimX = 1;
-	}
-	//
-	if( boundingBoxesInfo.size > maxThreadDimYPerBlock )
-	{
-		blockDimY = maxThreadDimYPerBlock;
-		gridDimY = (int)ceil( (double)(boundingBoxesInfo.size)/(double)(maxThreadDimYPerBlock) );
-	}
-	else
-	{
-		blockDimY = boundingBoxesInfo.size;
-		gridDimY = 1;
-	}
-	//
+	dim3 dimBlock2ndPass;
+	dim3 dimGrid2ndPass;
 
-	dim3 dimBlock2ndPass(blockDimX, blockDimY);
-	dim3 dimGrid2ndPass(gridDimX, gridDimY);
+	int frustumCount	= frustumPlanesInfo.size;
+	int boxCount		= boundingBoxesInfo.size;
+
+	ComputeGridSizes( frustumCount, boxCount, dimGrid2ndPass.x, dimGrid2ndPass.y, dimBlock2ndPass.x, dimBlock2ndPass.y );
 
 	// Process second pass : determine from first pass output the intersection between each frustum with each box.
 	ClassifyPyramidalFrustumBoxes( 
-		dimBlock2ndPass,
 		dimGrid2ndPass,
+		dimBlock2ndPass,
 		(const float*)frustumsCorners, 
 		(const float*)boundingBoxes,
 		(const int*)pointPlaneIntersection, 

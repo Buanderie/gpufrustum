@@ -21,7 +21,7 @@ void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, c
 void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out );
 
 __global__ void
-ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int nPlane, int nPoint, int* out );
+ClassifyPlanesPoints( const plane* iplanes, const point3d* ipoints, int planeCount, int pointCount, int* out );
 
 __global__ void
 ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out );

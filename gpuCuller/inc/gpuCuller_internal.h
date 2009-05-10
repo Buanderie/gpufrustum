@@ -5,10 +5,16 @@
 #include <iostream>
 #include <windows.h>
 
-#ifndef NDEBUG
+#ifdef _DEBUG
 	#define assert( condition, message ) if( !(condition) ) { std::cerr<< message << __FILE__ << __LINE__ << std::endl; DebugBreak(); }
 #else
 	#define assert( condition, message )
+#endif
+
+#ifdef _DEBUG
+	#define check_cuda_error( ) cudaError_t err = cudaGetLastError(); assert( cudaSuccess == err, "Cuda error " +  cudaGetErrorString( err ) )
+#else
+	#define check_cuda_error( ) 
 #endif
 
 struct ArrayInfo
@@ -53,5 +59,7 @@ void FreeDeviceMemory( GCULvoid* memory );
 int SizeInBytes( GCUL_ArrayDataType type );
 
 int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result );
+
+void ComputeGridSizes( int threadWidth, int threadHeight, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY );
 
 #endif // __GPUCULLER_INTERNAL_H__

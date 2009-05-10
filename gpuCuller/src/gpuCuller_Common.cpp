@@ -1,5 +1,6 @@
 #include <gpuCuller_internal.h>
 #include <cutil_inline.h>
+#include <cfloat>
 
 extern bool ArrayStates[ GCUL_END_ARRAY ];
 
@@ -98,4 +99,44 @@ int SizeInBytes( GCUL_ArrayDataType type )
 	case GCUL_DOUBLE	: return sizeof( double ); 
 	default				: assert( false, "Unknown type." ); return -1;
 	}
+}
+
+void ComputeGridSizes( int threadWidth, int threadHeight, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY )
+{
+	static cudaDeviceProp deviceProp;
+	cutilSafeCall(cudaGetDeviceProperties(&deviceProp, cutGetMaxGflopsDeviceId()));
+
+	static int maxGridDimX = deviceProp.maxGridSize  [0];
+	static int maxGridDimY = deviceProp.maxGridSize  [1];
+
+	static int sizes[] = { 512, 256, 128, 64, 32, 16, 8, 4, 2, 1 };
+	
+	float minDelta  = FLT_MAX;
+	int   best		= 0;
+	for( int i = 0; i < 10 ; ++i )
+	{
+		float blockCountX = ( float )threadWidth  / sizes[ i     ];
+		float blockCountY = ( float )threadHeight / sizes[ 9 - i ];
+
+		float deltaX = ( ceil( blockCountX ) - blockCountX ) * sizes[ i	 ];
+		float deltaY = ( ceil( blockCountY ) - blockCountY ) * sizes[ 9 - i ];
+
+		float deltaSum = deltaX + deltaY;
+		if( deltaSum < minDelta )
+		{
+			minDelta = deltaSum;
+			best	 = i;
+		}
+	}
+
+	blockDimX = min( threadWidth,  sizes[ best     ] );
+	blockDimY = min( threadHeight, sizes[ 9 - best ] );
+	
+	assert( blockDimX * blockDimY <= ( unsigned int )deviceProp.maxThreadsPerBlock, "Max number of threads per block reached." );
+
+	gridDimX = ( int )ceil( threadWidth  / ( float )blockDimX );
+	gridDimY = ( int )ceil( threadHeight / ( float )blockDimY );
+
+	assert( gridDimX <= ( unsigned int )maxGridDimX, "Max width of the grid reached." );
+	assert( gridDimY <= ( unsigned int )maxGridDimY, "Max height of the grid reached." );
 }

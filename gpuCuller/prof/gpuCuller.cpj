@@ -1,0 +1,22 @@
+<!DOCTYPE cpj>
+<cpj version="1.0" >
+ <session>
+  <name>Session1</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>09 May 2009 19:24:35</datetime>
+ </session>
+ <session>
+  <name>Session2</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>09 May 2009 19:28:42</datetime>
+ </session>
+ <session>
+  <name>Session3</name>
+  <progpath>"E:/UTBM/TX/Project/trunk/test/Benchmark/Release/Benchmark.exe"</progpath>
+  <workdirpath>E:/UTBM/TX/Project/trunk/test/Benchmark/Release</workdirpath>
+  <datetime>09 May 2009 21:56:11</datetime>
+ </session>
+</cpj>
+

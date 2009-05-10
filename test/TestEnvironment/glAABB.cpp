@@ -53,7 +53,7 @@ void glAABB::draw()
 	glVertex3f(m_MaxPos.x, m_MaxPos.y, m_MinPos.z);
 	glEnd();
 
-	glColor3f(1.0f, 0.0f, 0.0f);
+	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_LINES);
 	glVertex3f( m_MinPos.x, m_MinPos.y, m_MinPos.z );
 	glVertex3f( m_MaxPos.x, m_MinPos.y, m_MinPos.z );

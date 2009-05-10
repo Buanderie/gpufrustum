@@ -47,10 +47,10 @@ enum GCUL_ArrayDataType
 
 enum GCUL_Classification
 {
-	GCUL_ENCOSING = 0,
-	GCUL_INSIDE,
+	GCUL_INSIDE = 0,
+	GCUL_OUTSIDE,
 	GCUL_SPANNING,
-	GCUL_OUTSIDE	
+	GCUL_ENCOSING 
 };
 
 enum GCUL_Array

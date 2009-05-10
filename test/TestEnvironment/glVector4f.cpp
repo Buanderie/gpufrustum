@@ -80,7 +80,7 @@ glVector4f& glVector4f::operator =(const glVector4f& v)
 	y = v.y;
 	z = v.z;
 	w = v.w;
-	return glVector4f(x,y,z,w);
+	return *this;
 }
 
 glVector4f glVector4f::operator *(float scalar)

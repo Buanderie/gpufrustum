@@ -58,6 +58,8 @@ int main(int argc, char** argv)
 	int nFrustum = 50;
 	int nAABB = 512;
 
+	srand( 1 );
+
 	generateRandomPyrFrustums(	nFrustum,
 								45, 90,
 								1, 2,
@@ -117,6 +119,7 @@ int main(int argc, char** argv)
 		gculProcessFrustumCulling( gculResults );
 		float t = Clock.GetElapsedTime();
 		float cullingpersecond = ((float)(nFrustum*nAABB))/t;
+
 		printf("t=%f seconds\n", t);
 
 		for(int i = 0; i < nAABB; ++i)
@@ -124,8 +127,10 @@ int main(int argc, char** argv)
 			for(int j = 0; j < nFrustum; ++j)
 			{
 				if( gculResults[nFrustum*i + j] == GCUL_INSIDE || gculResults[nFrustum*i + j] == GCUL_SPANNING )
+				{
 					aabbList[i].isInsideFrustum = true;
-				//printf("%d ", gculResults[nFrustum*i +j]);
+					//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResults[nFrustum*i +j]);
+				}		
 			}
 			//printf("\r\n");
 		}
@@ -200,6 +205,14 @@ int main(int argc, char** argv)
 
 		FrameRateCpt.Reset();
     }
+
+	// delete arrays
+	delete[] frustumPlanesData;
+	delete[] frustumCornersData;
+	delete[] aabbCornersData;
+	delete[] gculResults;
+	
+	delete cam;
 
     return EXIT_SUCCESS;
 }

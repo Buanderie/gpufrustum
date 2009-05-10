@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\gpuCuller\include;&quot;.\ext\SFML-1.4\include&quot;"
+				AdditionalIncludeDirectories="..\..\gpuCuller\inc;&quot;.\ext\SFML-1.4\include&quot;"
 				PreprocessorDefinitions="SFML_DYNAMIC;WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"

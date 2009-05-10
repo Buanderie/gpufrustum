@@ -116,6 +116,7 @@
 			<Tool
 				Name="CUDA Build Rule"
 				Include="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
+				Emulation="false"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -228,42 +229,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\..\src\template.cu"
-			>
-		</File>
-		<File
-			RelativePath="..\..\src\template_gold.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\src\template_gpu.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\..\inc\template_gpu.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\src\template_kernel.cu"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="CUDA Build Rule"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				ExcludedFromBuild="true"
-				>
-				<Tool
-					Name="CUDA Build Rule"
-				/>
-			</FileConfiguration>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

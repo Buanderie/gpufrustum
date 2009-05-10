@@ -25,5 +25,12 @@ void main( int argc, char** argv)
 
 	GCUL_Classification* result = new GCUL_Classification[8];
 	gculProcessFrustumCulling( result );
-	printf("%d %d %d %d", result[1], result[2], result[3], result[4]);
+	
+	for( int i = 0; i < 2; ++i )
+	{
+		for( int j = 0; j < 4  ; ++j )
+		{
+			printf( "Frustum %d Box %d Result %d\n", i, j, result[ i + j * 2 ] );
+		}
+	}
 }
