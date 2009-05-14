@@ -6,6 +6,8 @@ extern ArrayInfo ArrayInfos[ GCUL_END_ARRAY ];
 
 extern DeviceFunctionEnv ClassifyPlanesPointsEnv;
 extern DeviceFunctionEnv ClassifyPyramidalFrustumBoxesEnv;
+extern DeviceFunctionEnv ClassifyPlanesSpheresEnv;
+extern DeviceFunctionEnv ClassifyPyramidalFrustumSpheresEnv;
 
 #define ARRAY_ASSERT()	assert( pointer != NULL,	"Null pointer detected." ); \
 						assert( type == GCUL_INT	|| \
@@ -87,7 +89,13 @@ GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 
 	if( currentFrustumType == FRUSTUMTYPE_PYRAMIDAL && currentBoundingVolumeType == BOUNDINGVOLUMETYPE_BOX )
 	{
+		assert( gculIsEnableArray( GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ), "Frustum corners not available to process the frustum culling." );
+
 		return ProcessPyramidalFrustumAABBoxCulling( result );
+	}
+	else if( currentFrustumType == FRUSTUMTYPE_PYRAMIDAL && currentBoundingVolumeType == BOUNDINGVOLUMETYPE_SPHERE )
+	{
+		return ProcessPyramidalFrustumSphereCulling( result );
 	}
 	else
 	{
@@ -164,28 +172,6 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	// Free device input memory.
 	FreeDeviceMemory( frustumsPlanes );
 
-	//Debug stuff
-	/*int* h_odata = new int[(frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)];
-	cutilSafeCall( cudaMemcpy( h_odata, pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8)*sizeof(int),
-                                cudaMemcpyDeviceToHost) );
-	//for each point
-	for(int i = 0; i < boundingBoxesInfo.size * 8; ++i )
-	{
-		//for each plane
-		for( int j = 0; j < frustumPlanesInfo.size * 6; ++j )
-		{
-			if( h_odata[i*frustumPlanesInfo.size*6 + j] != -1 && h_odata[i*frustumPlanesInfo.size*6 + j] != 1 )
-			{
-				int b = 42;
-				//assert( false, "BUUUUG" );
-			}
-			//printf("%d ", h_odata[i*frustumPlanesInfo.size*6 + j]);		
-		}
-		//printf("\r\n");
-	}
-	delete[] h_odata;*/
-	//
-
 	//--------------------
 	
 	//--------------------
@@ -245,6 +231,122 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 
 	// Copy the result from device memory.
 	cutilSafeCall(cudaMemcpy( result, resultDeviceMemory, frustumPlanesInfo.size * boundingBoxesInfo.size * sizeof(int), cudaMemcpyDeviceToHost));
+
+	FreeDeviceMemory( resultDeviceMemory );
+
+	//--------------------
+
+	return 0;
+}
+
+int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
+{
+	//--------------------
+	// First pass.
+
+	// Allocate frustum planes on device memory.
+	const ArrayInfo&	frustumPlanesInfo	= ArrayInfos[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ];
+	GCULvoid*			frustumsPlanes		= NULL;
+
+	AllocArrayDeviceMemory( &frustumsPlanes, frustumPlanesInfo );
+
+	if( frustumsPlanes == NULL )
+	{
+		assert( false, "Can not allocate device memory for frustum planes." );
+		return -1;
+	}
+
+	// Allocate bounding volumes on device memory.
+	const ArrayInfo&	boundingSpheresInfo	= ArrayInfos[ GCUL_BSPHERES_ARRAY ];
+	GCULvoid*			boundingSpheres		= NULL;
+
+	AllocArrayDeviceMemory( &boundingSpheres, boundingSpheresInfo );
+
+	if( boundingSpheres == NULL )
+	{
+		assert( false, "Can not allocate device memory for bounding volumes." );
+		return -1;
+	}
+
+	// Initialize input data on device memory.
+	CopyArrayToDeviceMemory( frustumsPlanes,  frustumPlanesInfo	  );
+	CopyArrayToDeviceMemory( boundingSpheres, boundingSpheresInfo );
+
+	// Compute Block/Grid sizes.
+	int planeCount  = frustumPlanesInfo.size * 6;	// six planes per frustum.
+	int sphereCount = boundingSpheresInfo.size;		// eight corners per box.
+
+	// Allocate the matrix for the first pass.
+	GCULvoid* spherePlaneIntersection = NULL;
+	cudaMalloc( &spherePlaneIntersection, planeCount * sphereCount * sizeof( int ) );
+
+	dim3 dimBlock1stPass;
+	dim3 dimGrid1stPass;
+
+	ComputeGridSizes( 
+		planeCount, 
+		sphereCount, 
+		ClassifyPlanesSpheresEnv,
+		dimGrid1stPass.x, 
+		dimGrid1stPass.y, 
+		dimBlock1stPass.x, 
+		dimBlock1stPass.y 
+		);
+
+	// Process first pass : intersect each plane with each box point.
+	ClassifyPlanesSpheres( 
+		dimGrid1stPass,
+		dimBlock1stPass,
+		frustumsPlanes, 
+		boundingSpheres, 
+		planeCount, 
+		sphereCount, 
+		(int*)spherePlaneIntersection 
+		);
+
+	// Free device input memory.
+	FreeDeviceMemory( frustumsPlanes  );
+	FreeDeviceMemory( boundingSpheres );
+
+	//--------------------
+
+	//--------------------
+	// Second pass.
+
+	// Allocate the result matrix on device memory.
+	GCULvoid* resultDeviceMemory = NULL;	
+	AllocResultDeviceMemory( &resultDeviceMemory, frustumPlanesInfo, boundingSpheresInfo );
+
+	dim3 dimBlock2ndPass;
+	dim3 dimGrid2ndPass;
+
+	int frustumCount = frustumPlanesInfo.size;
+
+	ComputeGridSizes( 
+		frustumCount, 
+		sphereCount, 
+		ClassifyPyramidalFrustumSpheresEnv,
+		dimGrid2ndPass.x, 
+		dimGrid2ndPass.y, 
+		dimBlock2ndPass.x, 
+		dimBlock2ndPass.y 
+		);
+
+	// Process second pass : determine from first pass output the intersection between each frustum with each box.
+	ClassifyPyramidalFrustumSpheres( 
+		dimGrid2ndPass,
+		dimBlock2ndPass,
+		(const int*)spherePlaneIntersection, 
+		frustumCount, 
+		sphereCount, 
+		(int*)resultDeviceMemory 
+		);
+
+	// Free device input memory.
+	FreeDeviceMemory( spherePlaneIntersection );
+
+	// Copy the result from device memory.
+	cutilSafeCall(cudaMemcpy( result, resultDeviceMemory, frustumCount * sphereCount * sizeof(int), cudaMemcpyDeviceToHost));
 
 	FreeDeviceMemory( resultDeviceMemory );
 

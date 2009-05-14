@@ -13,9 +13,25 @@ void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, c
 
 void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out )
 {
-	ClassifyPyramidalFrustumBoxes<<< gridSize, blockSize >>>( (point3d*)frustumCorners, (point3d*)boxPoints, planePointClassification, planeCount, pointCount, out );
+	ClassifyPyramidalFrustumBoxes<<< gridSize, blockSize >>>( ( float3* )frustumCorners, ( float3* )boxPoints, planePointClassification, planeCount, pointCount, out );
 
 	check_cuda_error();
+}
+
+void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, const void* spheres, int planeCount, int sphereCount, int* out )
+{
+	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 4 ) * sizeof( float );
+
+	ClassifyPlanesSpheres<<< gridSize, blockSize, sizeOfSharedMemory >>>( ( float4* )planes, ( float4* )spheres, planeCount, sphereCount, out );
+
+	check_cuda_error();
+}
+
+void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const int* planeSphereClassification, int frustumCount, int sphereCount, int* out )
+{
+	size_t sizeOfSharedMemory = ( blockSize.x * blockSize.y * 6 ) * sizeof( float );
+
+	ClassifyPyramidalFrustumSpheres<<< gridSize, blockSize, sizeOfSharedMemory >>>( ( int6* )planeSphereClassification, frustumCount, sphereCount, out );
 }
 
 /**
@@ -59,10 +75,6 @@ ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCou
 	int planeShIndex = threadIdx.x;	// offset to the first coordinate of the plane.
 	int pointShIndex = threadIdx.y;	// offset to the first coordinate of the point.
 
-	//sharedPlanes[ planeShIndex ] = iplanes[ x ];
-
-	//sharedPoints[ pointShIndex ] = ipoints[ y ];
-
 	// Only threads which are owned by the first row and the first column load data.
 	if( threadIdx.x == 0 && threadIdx.y == 0 )
 	{
@@ -93,14 +105,6 @@ ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCou
 
 	int outIndex = planeCount * y + x;
 
-	//float p = iplanes[x].x * ipoints[y].x + iplanes[x].y * ipoints[y].y + iplanes[x].z * ipoints[y].z + iplanes[x].w;
-	
-	/*if( p != p2 )
-	{
-		p = 1234567890;
-	}*/
-
-
 	//BACK
 	if( p >= 0 )
 	{
@@ -110,40 +114,6 @@ ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCou
 	{
 		out[ outIndex ] = 1;
 	}
-
-	//printf( "%d %d\n", x, y );
-
-	//On recupere l'indice du resultat de classification dans la matrice resultat
-	//int x = blockIdx.x * blockDim.x + threadIdx.x;
-	//int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-	////Si le thread travaille en dehors des dimensions de la matrice, on ne fait rien
-	//if( x >= planeCount || y >= pointCount )
-	//	return;
-
-	/*
-	//Transfert Global Memory -> Shared Memory
-	// Shared memory pour les plans
-	__shared__ float splanes[blockDim.y];
-	// Shared memory pour les points
-	__shared__ float spoints[blockDim.x];
-	// Shared memory pour la sortie
-	__shared__ float sout[BLOCK_SIZE][BLOCK_SIZE];
-	*/
-
-	/*float p = iplanes[x].x * ipoints[y].x + iplanes[x].y * ipoints[y].y + iplanes[x].z * ipoints[y].z + iplanes[x].w;
-
-	//BACK
-	if( p >= 0 )
-	{
-		out[ planeCount * y + x ] = -1;
-		return;
-	}
-	else //FRONT
-	{
-		out[ planeCount * y + x ] = 1;
-		return;
-	}*/
 }
 
 /**
@@ -173,7 +143,7 @@ ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCou
 	One thread is assigned to the classification of one box with one frustum.
 */
 __global__ void
-ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out )
+ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out )
 {
 	int threadX = blockIdx.x * blockDim.x + threadIdx.x;
 	int threadY = blockIdx.y * blockDim.y + threadIdx.y;
@@ -240,8 +210,8 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 			int boxIndex	 = threadY;
 
 			// Get the upper and lower point of the box.
-			point3d upperBoxPoint = UpperPoint( &boxPoints[ boxIndex ] );
-			point3d lowerBoxPoint = LowerPoint( &boxPoints[ boxIndex ] );
+			float3 upperBoxPoint = UpperPoint( &boxPoints[ boxIndex ] );
+			float3 lowerBoxPoint = LowerPoint( &boxPoints[ boxIndex ] );
 
 			bool spanning = false; // by default.
 
@@ -250,7 +220,7 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 			{
 				int frustumCornerIndex = frustumIndex * 8 + p;
 
-				point3d currentCorner = frustumCorners[ frustumCornerIndex ];
+				float3 currentCorner = frustumCorners[ frustumCornerIndex ];
 
 				// If a frustum corner is outside the box.
 				if( ( lowerBoxPoint.x > currentCorner.x ) || ( currentCorner.x > upperBoxPoint.x )
@@ -275,6 +245,134 @@ ClassifyPyramidalFrustumBoxes( const point3d* frustumCorners, const point3d* box
 	}
 }
 
+/**
+*/
+__global__ void
+ClassifyPlanesSpheres( const float4* planes, const float4* spheres, int planeCount, int sphereCount, int* out )
+{
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	// Exit if out of bounds.
+	if( x >= planeCount || y >= sphereCount )
+	{
+		return;
+	}
+
+	// Shared memory used to read input data.
+	// Shared memory is only used by same block threads. 
+	// * 0 to m   = planes
+	// * n+1 to n = spheres 
+	// The size of this array must be number_of_threads_per_block * sizeof( float ).
+	extern __shared__ float sharedMemory[];
+
+	float4* sharedPlanes  = ( float4* )&sharedMemory[ 0			    ];
+	float4* sharedSpheres = ( float4* )&sharedMemory[ blockDim.x * 4 ];
+
+	int planeShIndex  = threadIdx.x;	// offset to the first coordinate of the plane.
+	int sphereShIndex = threadIdx.y;	// offset to the first coordinate of the sphere.
+
+	// Only threads which are owned by the first row and the first column load data.
+	if( threadIdx.x == 0 && threadIdx.y == 0 )
+	{
+		// Load the 1st plane and the 1st sphere
+		sharedPlanes [ 0 ] = planes [ x ];
+		sharedSpheres[ 0 ] = spheres[ y ];
+	}
+	else if( threadIdx.x == 0 )
+	{
+		// Load the n-th sphere
+		sharedSpheres[ sphereShIndex ] = spheres[ y ];
+	}
+	else if( threadIdx.y == 0 )
+	{
+		// Load the n-th planes
+		sharedPlanes[ planeShIndex ] = planes[ x ];
+	}
+	
+	// Wait all reading thread.
+	__syncthreads();
+
+	// Compute the multiplication between the sphere position and the plane.
+	// P = <N.Pt> + D
+	float p =	sharedPlanes[ planeShIndex ].x * sharedSpheres[ sphereShIndex ].x + 
+				sharedPlanes[ planeShIndex ].y * sharedSpheres[ sphereShIndex ].y + 
+				sharedPlanes[ planeShIndex ].z * sharedSpheres[ sphereShIndex ].z + 
+				sharedPlanes[ planeShIndex ].w;
+
+	int outIndex = planeCount * y + x;
+
+	if( p >= sharedSpheres[ sphereShIndex ].w ) // distance >= radius
+	{
+		out[ outIndex ] = 1; // front
+	}
+	else if( p <= -sharedSpheres[ sphereShIndex ].w )
+	{
+		out[ outIndex ] = -1; // back
+	}
+	else
+	{
+		out[ outIndex ] = 0; // across
+	}
+}
+
+/**
+*/
+__global__ void
+ClassifyPyramidalFrustumSpheres( const int6* planeSphereClassification, int frustumCount, int sphereCount, int* out )
+{
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if( x >= frustumCount || y >= sphereCount )
+		return;
+
+	extern __shared__ int6 subClassification[];
+
+	int classShIndex = threadIdx.y * blockDim.x + threadIdx.x;
+
+	// Each thread load six values from the classification to the shared memory.
+	subClassification[ classShIndex ] = planeSphereClassification[ frustumCount * y+ x ];
+
+	int outIndex = frustumCount * y + x;
+
+	if( 
+		subClassification[ classShIndex ].a == -1 ||
+		subClassification[ classShIndex ].b == -1 ||
+		subClassification[ classShIndex ].c == -1 ||
+		subClassification[ classShIndex ].d == -1 ||
+		subClassification[ classShIndex ].e == -1 ||
+		subClassification[ classShIndex ].f == -1
+		)
+	{
+		out[ outIndex ] = GCUL_OUTSIDE;
+	}
+	else
+	{
+		int count = 0;
+
+		if( subClassification[ classShIndex ].a == 1 ) { ++count; } 
+		if( subClassification[ classShIndex ].b == 1 ) { ++count; } 
+		if( subClassification[ classShIndex ].c == 1 ) { ++count; } 
+		if( subClassification[ classShIndex ].d == 1 ) { ++count; } 
+		if( subClassification[ classShIndex ].e == 1 ) { ++count; } 
+		if( subClassification[ classShIndex ].f == 1 ) { ++count; } 
+
+		if( count == 0 )
+		{
+			out[ outIndex ] = GCUL_ENCLOSING;
+		}
+		else if( count == 6 )
+		{
+			out[ outIndex ] = GCUL_INSIDE;
+		}
+		else
+		{
+			out[ outIndex ] = GCUL_SPANNING;
+		}
+	}
+}
+
 __device__ int 
 SumArrayElements( const int* array, int elementCount )
 {
@@ -286,8 +384,8 @@ SumArrayElements( const int* array, int elementCount )
 	return sum;
 }
 
-__device__ point3d
-UpperPoint( const point3d* box )
+__device__ float3
+UpperPoint( const float3* box )
 {
 	float maxX, maxY, maxZ;
 
@@ -300,12 +398,12 @@ UpperPoint( const point3d* box )
 		if( box[ i ].z > maxZ ) { maxZ = box[ i ].z; }
 	}
 
-	point3d result = { maxX, maxY, maxZ };
+	float3 result = { maxX, maxY, maxZ };
 	return result;
 }
 
-__device__ point3d
-LowerPoint( const point3d* box )
+__device__ float3
+LowerPoint( const float3* box )
 {
 	float minX, minY, minZ;
 
@@ -318,7 +416,7 @@ LowerPoint( const point3d* box )
 		if( box[ i ].z < minZ ) { minZ = box[ i ].z; }
 	}
 
-	point3d result = { minX, minY, minZ };
+	float3 result = { minX, minY, minZ };
 	return result;
 }
 

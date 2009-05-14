@@ -50,7 +50,7 @@ enum GCUL_Classification
 	GCUL_INSIDE = 0,
 	GCUL_OUTSIDE,
 	GCUL_SPANNING,
-	GCUL_ENCOSING 
+	GCUL_ENCLOSING 
 };
 
 enum GCUL_Array
@@ -68,6 +68,8 @@ enum GCUL_Array
 //--------------------
 
 /**
+	Initialize the library and CUDA.
+	@see cutilDeviceInit for argc and argv.
 */
 GPUCULLER_API
 void __stdcall gculInitialize( int argc, char** argv );
@@ -85,6 +87,13 @@ void __stdcall gculEnableArray( GCUL_Array array );
 */
 GPUCULLER_API
 void __stdcall gculDisableArray( GCUL_Array array );
+
+/**
+	Return true if the given array is enabled. False otherwise.
+	Symbolic constants GCU_BOXES_ARRAY, GCUL_BSPHERES_ARRAY, GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY, GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY and GCU_SPHERICALFRUSTUM_ARRAY are accepted. 
+*/
+GPUCULLER_API
+bool __stdcall gculIsEnableArray( GCUL_Array array );
 
 /**
 	Specifies planes for pyramidal frustums.

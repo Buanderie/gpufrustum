@@ -17,6 +17,7 @@ class glPoint
 {
 public:
 	glPoint();
+	glPoint( float x, float y, float z );
 	virtual ~glPoint();
 
 	GLfloat z;

@@ -8,6 +8,14 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
+glPoint::glPoint( float _x, float _y, float _z ) :
+	x( _x ),
+	y( _y ),
+	z( _z )
+{
+
+}
+
 glPoint::glPoint()
 {
 	x = y = z = 0.0f;

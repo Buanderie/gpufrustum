@@ -223,7 +223,7 @@
 			Name="Kernels"
 			>
 			<File
-				RelativePath="..\..\src\frustumculling_kernel.cu"
+				RelativePath="..\..\src\gpuCuller_kernel.cu"
 				>
 			</File>
 			<File

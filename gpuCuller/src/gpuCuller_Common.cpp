@@ -29,9 +29,18 @@ void __stdcall gculDisableArray( GCUL_Array array )
 	}
 }
 
+bool __stdcall gculIsEnableArray( GCUL_Array array )
+{
+	if( array < GCUL_END_ARRAY )
+	{
+		return ArrayStates[ array ];
+	}
+	return false;
+}
+
 FrustumType CurrentFrustumType( void )
 {
-	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ] && ArrayStates[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ] )
+	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ] )
 	{
 		assert( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ] == false, "Pyramidal and spherical frustums can not be used at the same time." );
 
@@ -40,6 +49,8 @@ FrustumType CurrentFrustumType( void )
 
 	if( ArrayStates[ GCUL_SPHERICALFRUSTUM_ARRAY ] )
 	{
+		assert( ArrayStates[ GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY ] == false, "Pyramidal and spherical frustums can not be used at the same time." );
+
 		return FRUSTUMTYPE_SPHERICAL;
 	}
 	

@@ -9,6 +9,7 @@
 #include "rendering.h"
 #include "glCamera.h"
 #include "glPoint.h"
+#include "glSphere.h"
 #include "glMatrix4f.h"
 #include "glPyramidalFrustum.h"
 #include "utils.h"
@@ -58,7 +59,7 @@ int main(int argc, char** argv)
 	int nFrustum = 124;
 	int nAABB = 357;
 
-	srand( 1 );
+	srand( time( NULL ) );
 
 	generateRandomPyrFrustums(	nFrustum,
 								45, 90,
