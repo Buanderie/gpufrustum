@@ -139,7 +139,7 @@ void ComputeGridSizes( int threadWidth, int threadHeight, const DeviceFunctionEn
 			int sizeY = sizes[ 9 - j ];
 
 			// Make sure we do not reach the maximum of thread per block.
-			if( sizeX * sizeY <= preferedThreadPerBlock ) 
+			if( sizeX * sizeY <= preferedThreadPerBlock && sizeX * sizeY > 16 ) 
 			{
 				float blockCountX = ( float )threadWidth  / sizeX;
 				float blockCountY = ( float )threadHeight / sizeY;
