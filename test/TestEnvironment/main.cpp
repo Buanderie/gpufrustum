@@ -56,8 +56,18 @@ int main(int argc, char** argv)
 	cam->m_PitchDegrees = 0.0f;
 	cam->m_HeadingDegrees = 0.0f;
 	
-	int nFrustum = 124;
-	int nAABB = 357;
+	int nFrustum;
+	int nAABB;
+	if( argc == 3 )
+	{
+		nFrustum = atoi(argv[1]);
+		nAABB = atoi(argv[2]);
+	}
+	else
+	{
+		nFrustum = 124;
+		nAABB = 357;
+	}
 
 	srand( time( NULL ) );
 

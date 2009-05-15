@@ -83,7 +83,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy ..\..\cutil\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\"
+				CommandLine="copy ..\..\cutil\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -131,7 +131,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib glu32.lib sfml-system-s.lib gpuCuller.lib"
-				AdditionalLibraryDirectories="../../gpuCuller/lib;&quot;../SFML-1.4/lib/vc2008&quot;"
+				AdditionalLibraryDirectories="../../gpuCuller/lib&quot;../SFML-1.4/lib/vc2008&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
