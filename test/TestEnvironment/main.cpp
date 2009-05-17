@@ -65,8 +65,10 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		nFrustum = 124;
-		nAABB = 357;
+		//nFrustum = 124;
+		//nAABB = 357;
+		nFrustum = 1000;
+		nAABB = 1000;
 	}
 
 	srand( time( NULL ) );
@@ -131,7 +133,7 @@ int main(int argc, char** argv)
 		float t = Clock.GetElapsedTime();
 		float cullingpersecond = ((float)(nFrustum*nAABB))/t;
 
-		printf("t=%f seconds\n", t);
+		printf("delta_t = %f ms | %iM culling operations per second\n", t*1000.0f, (int)(cullingpersecond/1000000.0f));
  
 		for(int i = 0; i < nAABB; ++i)
 		{

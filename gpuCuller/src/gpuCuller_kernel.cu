@@ -18,6 +18,13 @@ void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* 
 	check_cuda_error();
 }
 
+void InverseClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, int planeCount, int pointCount, int* out )
+{
+	InverseClassifyPyramidalFrustumBoxes<<< gridSize, blockSize >>>( ( float3* )frustumCorners, ( float3* )boxPoints, planeCount, pointCount, out );
+
+	check_cuda_error();
+}
+
 void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, const void* spheres, int planeCount, int sphereCount, int* out )
 {
 	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 4 ) * sizeof( float );
@@ -206,8 +213,31 @@ ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPo
 		}
 		else
 		{
-			int frustumIndex = threadX;
-			int boxIndex	 = threadY;
+			out[ outIndex ] = GCUL_UNDEFINED;
+		}
+	}
+}
+
+__global__ void
+InverseClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, int planeCount, int pointCount, int* out )
+{
+			
+	int threadX = blockIdx.x * blockDim.x + threadIdx.x;
+	int threadY = blockIdx.y * blockDim.y + threadIdx.y;
+
+	int frustumIndex = threadX;
+	int boxIndex	 = threadY;
+
+	int frustumCount = planeCount / 6;
+	int boxCount	 = pointCount / 8;
+
+	if( threadX >= frustumCount || threadY >= boxCount )
+		return;
+
+	int outIndex = threadX + threadY * frustumCount;
+
+	if( out[ outIndex ] == GCUL_UNDEFINED )
+	{
 
 			// Get the upper and lower point of the box.
 			float3 upperBoxPoint = UpperPoint( &boxPoints[ boxIndex ] );
@@ -230,8 +260,7 @@ ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPo
         			( lowerBoxPoint.z > currentCorner.z ) || ( currentCorner.x > upperBoxPoint.z ) ) 
 				{
         			// The frustum intersects the box.
-					out[ outIndex ] = 2; // GCU_SPANNING
-
+					out[ outIndex ] = GCUL_SPANNING; // GCU_SPANNING
 					spanning = true;
         		} 
 			}
@@ -239,9 +268,8 @@ ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPo
 			if( !spanning )
 			{
 				// default case
-				out[ outIndex ] = 3; // GCU_ENCOSING
+				out[ outIndex ] = GCUL_ENCLOSING; // GCU_ENCOSING
 			}
-		}
 	}
 }
 

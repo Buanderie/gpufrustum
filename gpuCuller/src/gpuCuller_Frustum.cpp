@@ -151,7 +151,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		planeCount, 
 		pointCount, 
-		ClassifyPlanesPointsEnv,
+		364,
 		dimGrid1stPass.x, 
 		dimGrid1stPass.y, 
 		dimBlock1stPass.x, 
@@ -205,7 +205,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		frustumCount, 
 		boxCount, 
-		ClassifyPyramidalFrustumBoxesEnv,
+		372,
 		dimGrid2ndPass.x, 
 		dimGrid2ndPass.y, 
 		dimBlock2ndPass.x, 
@@ -223,6 +223,29 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		boundingBoxesInfo.size * 8, 
 		(int*)resultDeviceMemory 
 	);
+
+//// THIRD PASS /////////////////////////////////////////////////////////////
+	ComputeGridSizes( 
+		frustumCount, 
+		boxCount, 
+		232,
+		dimGrid2ndPass.x, 
+		dimGrid2ndPass.y, 
+		dimBlock2ndPass.x, 
+		dimBlock2ndPass.y 
+	);
+
+	// Process second pass : determine from first pass output the intersection between each frustum with each box.
+	InverseClassifyPyramidalFrustumBoxes( 
+		dimGrid2ndPass,
+		dimBlock2ndPass,
+		(const float*)frustumsCorners, 
+		(const float*)boundingBoxes,
+		frustumPlanesInfo.size * 6, 
+		boundingBoxesInfo.size * 8, 
+		(int*)resultDeviceMemory 
+	);
+//// THIRD PASS //////////////////////////////////////////////////////////////
 
 	// Free device input memory.
 	FreeDeviceMemory( frustumsCorners		 );
@@ -286,7 +309,7 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		planeCount, 
 		sphereCount, 
-		ClassifyPlanesSpheresEnv,
+		256,
 		dimGrid1stPass.x, 
 		dimGrid1stPass.y, 
 		dimBlock1stPass.x, 
@@ -325,7 +348,7 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		frustumCount, 
 		sphereCount, 
-		ClassifyPyramidalFrustumSpheresEnv,
+		256,
 		dimGrid2ndPass.x, 
 		dimGrid2ndPass.y, 
 		dimBlock2ndPass.x, 

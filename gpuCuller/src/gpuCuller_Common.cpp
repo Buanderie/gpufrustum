@@ -120,7 +120,7 @@ int SizeInBytes( GCUL_ArrayDataType type )
 	}
 }
 
-void ComputeGridSizes( int threadWidth, int threadHeight, const DeviceFunctionEnv& functionEnv, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY )
+void ComputeGridSizes( int threadWidth, int threadHeight, int desiredThreadPerBlock, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY )
 {
 	static cudaDeviceProp deviceProp;
 	cutilSafeCall(cudaGetDeviceProperties(&deviceProp, cutGetMaxGflopsDeviceId()));
@@ -131,58 +131,10 @@ void ComputeGridSizes( int threadWidth, int threadHeight, const DeviceFunctionEn
 	static int maxThreadPerBlock	= deviceProp.maxThreadsPerBlock;
 	static int maxRegisterPerBlock	= deviceProp.regsPerBlock;
 
-	// Choose the right number of thread per block according to
-	// the number of register used by the kernel.
-	int preferedThreadPerBlock = min( maxThreadPerBlock, ( int )floor( ( float )maxRegisterPerBlock / functionEnv.registerPerThread ) );
+	int dimBlock = (int)sqrt( (double)desiredThreadPerBlock );
 
-	static int sizes[] = { 512, 256, 128, 64, 32, 16, 8, 4, 2, 1 };
-	
-	// Test some different block sizes to get the best.
-	float minDelta  = FLT_MAX;
-	int   bestX		= -1;
-	int   bestY		= -1;
-	for( int i = 0; i < 10 ; ++i )
-	{
-		int sizeX = sizes[ i ];
-		
-		for( int j = 0; j < i + 1 ; ++j )
-		{
-			int sizeY = sizes[ 9 - j ];
-
-			// Make sure we do not reach the maximum of thread per block.
-			if( sizeX * sizeY <= preferedThreadPerBlock && sizeX * sizeY > 16 ) 
-			{
-				float blockCountX = ( float )threadWidth  / sizeX;
-				float blockCountY = ( float )threadHeight / sizeY;
-
-				float deltaX = ( ceil( blockCountX ) - blockCountX ) * sizeX;
-				float deltaY = ( ceil( blockCountY ) - blockCountY ) * sizeY;
-
-				float deltaSum = deltaX + deltaY;
-				if( deltaSum < minDelta )
-				{
-					minDelta = deltaSum;
-					bestX	 = i;
-					bestY	 = 9 - j;
-				}
-			}
-		}
-	}
-
-	if( bestX == -1 && bestY == -1 )
-	{
-		assert( false, "Can not compute grid and block sizes." ); 
-		return;
-	}
-
-	blockDimX = min( threadWidth,  sizes[ bestX ] );
-	blockDimY = min( threadHeight, sizes[ bestY ] );
-	
-	assert( blockDimX * blockDimY <= ( unsigned int )deviceProp.maxThreadsPerBlock, "Max number of threads per block reached." );
-
-	gridDimX = ( int )ceil( threadWidth  / ( float )blockDimX );
-	gridDimY = ( int )ceil( threadHeight / ( float )blockDimY );
-
-	assert( gridDimX <= ( unsigned int )maxGridDimX, "Max width of the grid reached." );
-	assert( gridDimY <= ( unsigned int )maxGridDimY, "Max height of the grid reached." );
+	gridDimX = (int)ceil( (double)threadWidth / (double)dimBlock );
+	gridDimY = (int)ceil( (double)threadHeight / (double)dimBlock );
+	blockDimX = dimBlock;
+	blockDimY = dimBlock;
 }
