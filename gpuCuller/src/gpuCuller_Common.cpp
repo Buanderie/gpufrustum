@@ -78,34 +78,26 @@ void AllocArrayDeviceMemory( GCULvoid** pointer, const ArrayInfo& info )
 {
 	int size = info.size * info.elementWidth * SizeInBytes( info.type );
 	
-	cudaMalloc((void**)pointer, size);
-
-	check_cuda_error();
+	cuda_call( cudaMalloc((void**)pointer, size) );
 }
 
 void CopyArrayToDeviceMemory( GCULvoid* array, const ArrayInfo& info )
 {
 	int size = info.size * info.elementWidth * SizeInBytes( info.type );
 
-	cudaMemcpy( array, info.pointer, size, cudaMemcpyHostToDevice);
-
-	check_cuda_error();
+	cuda_call( cudaMemcpy( array, info.pointer, size, cudaMemcpyHostToDevice ) );
 }
 
 void AllocResultDeviceMemory( GCULvoid** memory, const ArrayInfo& frustumInfo, const ArrayInfo& boundingInfo )
 {
-	cudaMalloc( memory, frustumInfo.size * boundingInfo.size * sizeof( GCUL_Classification ) );
-
-	check_cuda_error();
+	cuda_call( cudaMalloc( memory, frustumInfo.size * boundingInfo.size * sizeof( GCUL_Classification ) ) );
 }
 
 void FreeDeviceMemory( GCULvoid* memory )
 {
 	if( memory != NULL )
 	{
-		cudaFree( memory );
-
-		check_cuda_error();
+		cuda_call( cudaFree( memory ) );
 	}
 }
 
@@ -123,7 +115,7 @@ int SizeInBytes( GCUL_ArrayDataType type )
 void ComputeGridSizes( int threadWidth, int threadHeight, int desiredThreadPerBlock, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY )
 {
 	static cudaDeviceProp deviceProp;
-	cutilSafeCall(cudaGetDeviceProperties(&deviceProp, cutGetMaxGflopsDeviceId()));
+	cuda_call( cudaGetDeviceProperties( &deviceProp, cutGetMaxGflopsDeviceId() ) );
 
 	// Get some information about the device.
 	static int maxGridDimX			= deviceProp.maxGridSize[0];
@@ -137,4 +129,9 @@ void ComputeGridSizes( int threadWidth, int threadHeight, int desiredThreadPerBl
 	gridDimY = (int)ceil( (double)threadHeight / (double)dimBlock );
 	blockDimX = dimBlock;
 	blockDimY = dimBlock;
+
+	assert( gridDimX <= maxGridDimX, "Maximum grid size reached." );
+	assert( gridDimY <= maxGridDimY, "Maximum grid size reached." );
+
+	assert( blockDimX * blockDimY <= maxThreadPerBlock, "Maximum thread per block reached." );
 }

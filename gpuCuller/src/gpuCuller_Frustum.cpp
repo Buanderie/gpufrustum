@@ -139,7 +139,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 
 	// Allocate the matrix for the first pass.
 	GCULvoid* pointPlaneIntersection = NULL;
-	cudaMalloc( &pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8) * sizeof( int ));
+	cuda_call( cudaMalloc( &pointPlaneIntersection, (frustumPlanesInfo.size*6) * (boundingBoxesInfo.size*8) * sizeof( char )) );
 
 	// Compute Block/Grid sizes.
 	int planeCount = frustumPlanesInfo.size * 6;	// six planes per frustum.
@@ -166,7 +166,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		boundingBoxes, 
 		frustumPlanesInfo.size * 6, 
 		boundingBoxesInfo.size * 8, 
-		(int*)pointPlaneIntersection 
+		(char*)pointPlaneIntersection 
 	);
 
 	// Free device input memory.
@@ -218,7 +218,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		dimBlock2ndPass,
 		(const float*)frustumsCorners, 
 		(const float*)boundingBoxes,
-		(const int*)pointPlaneIntersection, 
+		(const char*)pointPlaneIntersection, 
 		frustumPlanesInfo.size * 6, 
 		boundingBoxesInfo.size * 8, 
 		(int*)resultDeviceMemory 

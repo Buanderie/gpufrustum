@@ -99,6 +99,4 @@ int main( int argc, char** argv )
 
 	delete[] boxData;
 	delete[] frustumData;
-
-	system( "pause" );
 }

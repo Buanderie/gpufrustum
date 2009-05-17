@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 	{
 		//nFrustum = 124;
 		//nAABB = 357;
-		nFrustum = 1000;
+		nFrustum = 100;
 		nAABB = 1000;
 	}
 

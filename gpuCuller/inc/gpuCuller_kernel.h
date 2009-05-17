@@ -16,9 +16,9 @@ struct __align__(16) int6
 // Public interface
 //--------------------
 
-void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, int* out );
+void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, char* out );
 
-void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out );
+void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const char* planePointClassification, int planeCount, int pointCount, int* out );
 
 void InverseClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, int planeCount, int pointCount, int* out );
 
@@ -31,10 +31,10 @@ void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const int* 
 //--------------------
 
 __global__ void
-ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCount, int pointCount, int* out );
+ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCount, int pointCount, char* out );
 
 __global__ void
-ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out );
+ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, const char* planePointClassification, int planeCount, int pointCount, int* out );
 
 __global__ void
 InverseClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, int planeCount, int pointCount, int* out );

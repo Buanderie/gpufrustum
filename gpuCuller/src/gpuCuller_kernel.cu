@@ -2,7 +2,7 @@
 #include <gpuCuller_kernel.h>
 #include <cutil_inline.h>
 
-void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, int* out )
+void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, char* out )
 {
 	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 3 ) * sizeof( float );
 
@@ -11,7 +11,7 @@ void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, c
 	check_cuda_error();
 }
 
-void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out )
+void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, const char* planePointClassification, int planeCount, int pointCount, int* out )
 {
 	ClassifyPyramidalFrustumBoxes<<< gridSize, blockSize >>>( ( float3* )frustumCorners, ( float3* )boxPoints, planePointClassification, planeCount, pointCount, out );
 
@@ -57,7 +57,7 @@ void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const int* 
 	m = point count - 1.
 */
 __global__ void
-ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCount, int pointCount, int* out )
+ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCount, int pointCount, char* out )
 {
 	//On recupere l'indice du resultat de classification dans la matrice resultat
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -150,7 +150,7 @@ ClassifyPlanesPoints( const float4* iplanes, const float3* ipoints, int planeCou
 	One thread is assigned to the classification of one box with one frustum.
 */
 __global__ void
-ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, const int* planePointClassification, int planeCount, int pointCount, int* out )
+ClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, const char* planePointClassification, int planeCount, int pointCount, int* out )
 {
 	int threadX = blockIdx.x * blockDim.x + threadIdx.x;
 	int threadY = blockIdx.y * blockDim.y + threadIdx.y;

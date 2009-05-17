@@ -131,7 +131,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib glu32.lib sfml-system-s.lib gpuCuller.lib"
-				AdditionalLibraryDirectories="../../gpuCuller/lib&quot;../SFML-1.4/lib/vc2008&quot;"
+				AdditionalLibraryDirectories="&quot;../SFML-1.4/lib/vc2008&quot;;../../gpuCuller/lib"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

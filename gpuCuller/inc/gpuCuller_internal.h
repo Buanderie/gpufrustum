@@ -17,6 +17,12 @@
 	#define check_cuda_error( ) 
 #endif
 
+#ifdef _DEBUG
+	#define cuda_call( cudafunc ) cudaError_t err = cudafunc; assert( err == cudaSuccess, cudaGetLastError() );
+#else
+	#define cuda_call( cudafunc ) cudafunc
+#endif
+
 struct ArrayInfo
 {
 	GCULuint			size;
