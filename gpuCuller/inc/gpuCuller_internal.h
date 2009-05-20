@@ -50,6 +50,7 @@ struct DeviceFunctionEnv
 {
 	unsigned int registerPerThread;
 	unsigned int sharedMemorySize;
+	unsigned int desiredThreadPerBlock;
 };
 
 //--------------------

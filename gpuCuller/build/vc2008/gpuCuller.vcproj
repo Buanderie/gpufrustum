@@ -196,6 +196,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\gpuCuller_BVH.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\gpuCuller_internal.h"
 				>
 			</File>
@@ -203,6 +207,10 @@
 		<Filter
 			Name="Sources"
 			>
+			<File
+				RelativePath="..\..\src\gpuCuller_BVH.cpp"
+				>
+			</File>
 			<File
 				RelativePath="..\..\src\gpuCuller_Common.cpp"
 				>

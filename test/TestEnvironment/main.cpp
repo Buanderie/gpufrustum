@@ -67,8 +67,8 @@ int main(int argc, char** argv)
 	{
 		//nFrustum = 124;
 		//nAABB = 357;
-		nFrustum = 100;
-		nAABB = 1000;
+		nFrustum = 20000;
+		nAABB = 500;
 	}
 
 	srand( time( NULL ) );

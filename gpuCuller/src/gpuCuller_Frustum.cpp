@@ -8,6 +8,7 @@ extern DeviceFunctionEnv ClassifyPlanesPointsEnv;
 extern DeviceFunctionEnv ClassifyPyramidalFrustumBoxesEnv;
 extern DeviceFunctionEnv ClassifyPlanesSpheresEnv;
 extern DeviceFunctionEnv ClassifyPyramidalFrustumSpheresEnv;
+extern DeviceFunctionEnv InverseClassifyPyramidalFrustumBoxesEnv;
 
 #define ARRAY_ASSERT()	assert( pointer != NULL,	"Null pointer detected." ); \
 						assert( type == GCUL_INT	|| \
@@ -107,7 +108,7 @@ GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 {
 	//--------------------
-	// First pass.
+//// FIRST PASS //////////////////////////////////////////////////////////////
 
 	// Allocate frustum planes on device memory.
 	const ArrayInfo&	frustumPlanesInfo	= ArrayInfos[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ];
@@ -151,7 +152,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		planeCount, 
 		pointCount, 
-		364,
+		ClassifyPlanesPointsEnv.desiredThreadPerBlock,
 		dimGrid1stPass.x, 
 		dimGrid1stPass.y, 
 		dimBlock1stPass.x, 
@@ -171,11 +172,10 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 
 	// Free device input memory.
 	FreeDeviceMemory( frustumsPlanes );
-
-	//--------------------
+//// FIRST PASS //////////////////////////////////////////////////////////////
 	
 	//--------------------
-	// Second pass.
+//// SECOND PASS /////////////////////////////////////////////////////////////
 
 	// Allocate the result matrix on device memory.
 	GCULvoid* resultDeviceMemory = NULL;	
@@ -205,7 +205,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		frustumCount, 
 		boxCount, 
-		372,
+		ClassifyPlanesPointsEnv.desiredThreadPerBlock,
 		dimGrid2ndPass.x, 
 		dimGrid2ndPass.y, 
 		dimBlock2ndPass.x, 
@@ -223,12 +223,13 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		boundingBoxesInfo.size * 8, 
 		(int*)resultDeviceMemory 
 	);
+//// SECOND PASS ////////////////////////////////////////////////////////////
 
 //// THIRD PASS /////////////////////////////////////////////////////////////
 	ComputeGridSizes( 
 		frustumCount, 
 		boxCount, 
-		232,
+		InverseClassifyPyramidalFrustumBoxesEnv.desiredThreadPerBlock,
 		dimGrid2ndPass.x, 
 		dimGrid2ndPass.y, 
 		dimBlock2ndPass.x, 
@@ -309,7 +310,7 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		planeCount, 
 		sphereCount, 
-		256,
+		ClassifyPlanesSpheresEnv.desiredThreadPerBlock,
 		dimGrid1stPass.x, 
 		dimGrid1stPass.y, 
 		dimBlock1stPass.x, 
@@ -348,7 +349,7 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 	ComputeGridSizes( 
 		frustumCount, 
 		sphereCount, 
-		256,
+		ClassifyPyramidalFrustumSpheresEnv.desiredThreadPerBlock,
 		dimGrid2ndPass.x, 
 		dimGrid2ndPass.y, 
 		dimBlock2ndPass.x, 

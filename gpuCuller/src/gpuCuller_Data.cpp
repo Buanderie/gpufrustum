@@ -21,23 +21,34 @@ ArrayInfo ArrayInfos[ GCUL_END_ARRAY ] =
 DeviceFunctionEnv ClassifyPlanesPointsEnv =
 {
 	10,
-	48
+	48,
+	364
 };
 
 DeviceFunctionEnv ClassifyPyramidalFrustumBoxesEnv =
 {
 	29,
-	48
+	48,
+	372
+};
+
+DeviceFunctionEnv InverseClassifyPyramidalFrustumBoxesEnv =
+{
+	29,
+	48,
+	232
 };
 
 DeviceFunctionEnv ClassifyPlanesSpheresEnv =
 {
 	10,
-	48
+	48,
+	256
 };
 
 DeviceFunctionEnv ClassifyPyramidalFrustumSpheresEnv =
 {
 	8,
-	32
+	32,
+	256
 };
