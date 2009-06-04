@@ -3,6 +3,7 @@
 ////////////////////////////////////////////////////////////
 #include <vector>
 #include <SFML/Window.hpp>
+#include <iostream>
 
 #include <gpuCuller.h>
 
@@ -20,7 +21,9 @@ using namespace std;
 glCamera* cam;
 vector<glPyramidalFrustum> frustumList;
 vector<glAABB> aabbList;
-GCUL_Classification* gculResults;
+vector<glSphere> sphereList;
+GCUL_Classification* gculResultsBoxes;
+GCUL_Classification* gculResultsSpheres;
 ////////////////////////////////////////////////////////////
 
 int main(int argc, char** argv)
@@ -58,6 +61,7 @@ int main(int argc, char** argv)
 	
 	int nFrustum;
 	int nAABB;
+	int nSpheres;
 	if( argc == 3 )
 	{
 		nFrustum = atoi(argv[1]);
@@ -67,11 +71,13 @@ int main(int argc, char** argv)
 	{
 		//nFrustum = 124;
 		//nAABB = 357;
-		nFrustum = 20000;
-		nAABB = 500;
+		nFrustum = 20;
+		nSpheres = 100;
+		nAABB = 100;
 	}
 
-	srand( time( NULL ) );
+	//srand( time( NULL ) );
+	srand( 10 );
 
 	generateRandomPyrFrustums(	nFrustum,
 								45, 90,
@@ -95,18 +101,29 @@ int main(int argc, char** argv)
 							aabbList
 							);
 
+	generateRandomSpheres( nSpheres,
+							1.0f, 2.5f,
+							-100, 100,
+							0, 0,
+							-100, 100,
+							sphereList
+							);
+
 	//gpuCuller
 	float* frustumPlanesData = new float[nFrustum*24];
 	float* frustumCornersData = new float[nFrustum*24];
 	float* aabbCornersData = new float[nAABB*24];
+	float* spheresData = new float[nSpheres*4];
 	getFrustumPlanesArray( frustumList, frustumPlanesData );
 	getFrustumPlanesArray( frustumList, frustumCornersData );
 	getAABBCornersArray( aabbList, aabbCornersData );
+	getSpheresArray( sphereList, spheresData );
 
 	//Initialize gpuCuller
 	gculInitialize( argc, argv );
 	gculDisableArray( GCUL_SPHERICALFRUSTUM_ARRAY );
-	gculDisableArray( GCUL_BSPHERES_ARRAY );
+	//gculDisableArray( GCUL_BSPHERES_ARRAY );
+	//gculDisableArray( GCUL_BBOXES_ARRAY );
 
 	//Initialize data	
 	//Add n frustum
@@ -116,11 +133,12 @@ int main(int argc, char** argv)
 	gculPyramidalFrustumPlanesPointer( nFrustum, GCUL_FLOAT, frustumPlanesData );
 	
 	//Add m AABB
-	gculEnableArray( GCUL_BBOXES_ARRAY );
 	gculBoxesPointer( nAABB, GCUL_FLOAT, aabbCornersData );
+	gculSpheresPointer( nSpheres, GCUL_FLOAT, spheresData );
 
 	//Prepare output
-	gculResults = new GCUL_Classification[nFrustum * nAABB];
+	gculResultsBoxes	= new GCUL_Classification[nFrustum * nAABB	 ];
+	gculResultsSpheres	= new GCUL_Classification[nFrustum * nSpheres];
 	//
 
 
@@ -129,17 +147,44 @@ int main(int argc, char** argv)
     {
 		//Frustum Culling
 		Clock.Reset();
-		gculProcessFrustumCulling( gculResults );
-		float t = Clock.GetElapsedTime();
-		float cullingpersecond = ((float)(nFrustum*nAABB))/t;
+		
+		gculEnableArray( GCUL_BSPHERES_ARRAY );
+		gculDisableArray( GCUL_BBOXES_ARRAY );
 
-		printf("delta_t = %f ms | %iM culling operations per second\n", t*1000.0f, (int)(cullingpersecond/1000000.0f));
+		gculProcessFrustumCulling( gculResultsSpheres );
+
+		gculEnableArray( GCUL_BBOXES_ARRAY );
+		gculDisableArray( GCUL_BSPHERES_ARRAY );
+
+		gculProcessFrustumCulling( gculResultsBoxes );
+
+		float t = Clock.GetElapsedTime();
+		float cullingpersecond = ( nFrustum * nAABB + nFrustum * nSpheres )/ t;
+
+		printf("delta_t = %f ms | %fM culling operations per second\n", t * 1000.0f, cullingpersecond / 1000000.0f );
  
+		for(int i = 0; i < nSpheres; ++i)
+		{
+			for(int j = 0; j < nFrustum; ++j)
+			{
+				//std::cout << gculResults[nFrustum*i + j] << std::endl;
+				if( gculResultsSpheres[nFrustum*i + j] == GCUL_INSIDE || gculResultsSpheres[nFrustum*i + j] == GCUL_SPANNING )
+				{
+					sphereList[i].SetInsideFrustum( true );
+					//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResults[nFrustum*i +j]);
+				}
+				else
+				{
+					int b = 0;
+				}
+			}
+		}
+
 		for(int i = 0; i < nAABB; ++i)
 		{
 			for(int j = 0; j < nFrustum; ++j)
 			{
-				if( gculResults[nFrustum*i + j] == GCUL_INSIDE || gculResults[nFrustum*i + j] == GCUL_SPANNING )
+				if( gculResultsBoxes[nFrustum*i + j] == GCUL_INSIDE || gculResultsBoxes[nFrustum*i + j] == GCUL_SPANNING )
 				{
 					aabbList[i].isInsideFrustum = true;
 					//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResults[nFrustum*i +j]);
@@ -147,7 +192,7 @@ int main(int argc, char** argv)
 			}
 			//printf("\r\n");
 		}
-		//
+		
 
 
         // Process events
@@ -213,6 +258,11 @@ int main(int argc, char** argv)
 		for(int i = 0; i < aabbList.size(); ++i )
 			aabbList[i].draw();
 
+		for( int i = 0; i < sphereList.size(); ++i )
+		{
+			sphereList[ i ].Draw();
+		}
+
         // Finally, display rendered frame on screen
         App.Display();
 
@@ -223,10 +273,11 @@ int main(int argc, char** argv)
 	delete[] frustumPlanesData;
 	delete[] frustumCornersData;
 	delete[] aabbCornersData;
-	delete[] gculResults;
+	delete[] gculResultsSpheres;
+	delete[] gculResultsBoxes;
 	
 	delete cam;
 
     return EXIT_SUCCESS;
-}
+ }
 

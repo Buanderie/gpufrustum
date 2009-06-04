@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <SFML/System/Randomizer.hpp>
 
 float randf()
 {
@@ -58,6 +59,27 @@ void generateRandomAABBs(	int n,
 	}
 }
 
+void generateRandomSpheres(	int n,
+						 float minRadius, float maxRadius,
+						 float minPosX, float maxPosX,
+						 float minPosY, float maxPosY,
+						 float minPosZ, float maxPosZ,
+						 std::vector<glSphere>& list
+							)
+{
+	sf::Randomizer::SetSeed( 11 );
+
+	for( int i = 0; i < n; ++i )
+	{
+		float radius	= sf::Randomizer::Random( minRadius,	maxRadius	);
+		float x			= sf::Randomizer::Random( minPosX,		maxPosX		);
+		float y			= sf::Randomizer::Random( minPosY,		maxPosY		);
+		float z			= sf::Randomizer::Random( minPosZ,		maxPosZ		);
+
+		list.push_back( glSphere( glPoint( x, y, z ), radius ) );
+	}
+}
+
 void getFrustumPlanesArray( std::vector<glPyramidalFrustum>& list, float* a )
 {
 	for(int i = 0; i < list.size(); ++i )
@@ -79,5 +101,19 @@ void getAABBCornersArray( std::vector<glAABB> list, float* a )
 	for(int i = 0; i < list.size(); ++i )
 	{
 		list[i].extractCornersData(a + i*24);
+	}
+}
+
+void getSpheresArray( const std::vector<glSphere>& spheres, float* data )
+{
+	sf::Randomizer::SetSeed( 10 );
+	for(int i = 0; i < spheres.size(); ++i )
+	{
+		int index = i * 4;
+
+		data[ index		] = spheres[ i ].GetCenter().x;
+		data[ index + 1 ] = spheres[ i ].GetCenter().y;
+		data[ index + 2 ] = spheres[ i ].GetCenter().z;
+		data[ index + 3 ] = spheres[ i ].GetRadius();
 	}
 }

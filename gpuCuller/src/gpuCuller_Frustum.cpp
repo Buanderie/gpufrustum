@@ -63,6 +63,20 @@ void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* p
 	info->pointer	= pointer;
 }
 
+void __stdcall gculSpheresPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
+{
+	//--------------------
+	// Pre-conditions
+	ARRAY_ASSERT();
+	//--------------------
+
+	ArrayInfo* info = &ArrayInfos[ GCUL_BSPHERES_ARRAY ];
+
+	info->size		= size;
+	info->type		= ( GCUL_ArrayDataType )type;
+	info->pointer	= pointer;
+}
+
 GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 {
 	//--------------------
@@ -107,7 +121,6 @@ GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 
 int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 {
-	//--------------------
 //// FIRST PASS //////////////////////////////////////////////////////////////
 
 	// Allocate frustum planes on device memory.
@@ -174,7 +187,6 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	FreeDeviceMemory( frustumsPlanes );
 //// FIRST PASS //////////////////////////////////////////////////////////////
 	
-	//--------------------
 //// SECOND PASS /////////////////////////////////////////////////////////////
 
 	// Allocate the result matrix on device memory.
@@ -298,11 +310,11 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 
 	// Compute Block/Grid sizes.
 	int planeCount  = frustumPlanesInfo.size * 6;	// six planes per frustum.
-	int sphereCount = boundingSpheresInfo.size;		// eight corners per box.
+	int sphereCount = boundingSpheresInfo.size;		// 
 
 	// Allocate the matrix for the first pass.
 	GCULvoid* spherePlaneIntersection = NULL;
-	cudaMalloc( &spherePlaneIntersection, planeCount * sphereCount * sizeof( int ) );
+	cuda_call( cudaMalloc( &spherePlaneIntersection, frustumPlanesInfo.size * 6 * sphereCount * sizeof( char ) ) );
 
 	dim3 dimBlock1stPass;
 	dim3 dimGrid1stPass;
@@ -325,12 +337,15 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 		boundingSpheres, 
 		planeCount, 
 		sphereCount, 
-		(int*)spherePlaneIntersection 
+		(char*)spherePlaneIntersection 
 		);
 
 	// Free device input memory.
 	FreeDeviceMemory( frustumsPlanes  );
 	FreeDeviceMemory( boundingSpheres );
+
+	char* dest = new char[ frustumPlanesInfo.size * 6 * sphereCount ];
+	cudaMemcpy( dest, spherePlaneIntersection, frustumPlanesInfo.size * 6 * sphereCount * sizeof( char ), cudaMemcpyDeviceToHost );
 
 	//--------------------
 
@@ -356,11 +371,11 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 		dimBlock2ndPass.y 
 		);
 
-	// Process second pass : determine from first pass output the intersection between each frustum with each box.
+	// Process second pass : determine from first pass output the intersection between each frustum with each sphere.
 	ClassifyPyramidalFrustumSpheres( 
 		dimGrid2ndPass,
 		dimBlock2ndPass,
-		(const int*)spherePlaneIntersection, 
+		(const char*)spherePlaneIntersection, 
 		frustumCount, 
 		sphereCount, 
 		(int*)resultDeviceMemory 

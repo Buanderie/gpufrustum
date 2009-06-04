@@ -8,9 +8,9 @@ public:
 
 	glSphere( glPoint center, float radius );
 
-	glPoint GetCenter() { return m_Center; }
+	const glPoint& GetCenter() const { return m_Center; }
 
-	float GetRadius() { return m_Radius; }
+	float GetRadius() const { return m_Radius; }
 
 	void SetCenter( const glPoint center ) { m_Center = center; }
 

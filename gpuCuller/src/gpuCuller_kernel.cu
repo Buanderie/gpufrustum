@@ -25,7 +25,7 @@ void InverseClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const 
 	check_cuda_error();
 }
 
-void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, const void* spheres, int planeCount, int sphereCount, int* out )
+void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, const void* spheres, int planeCount, int sphereCount, char* out )
 {
 	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 4 ) * sizeof( float );
 
@@ -34,11 +34,13 @@ void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, c
 	check_cuda_error();
 }
 
-void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const int* planeSphereClassification, int frustumCount, int sphereCount, int* out )
+void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const char* planeSphereClassification, int frustumCount, int sphereCount, int* out )
 {
-	size_t sizeOfSharedMemory = ( blockSize.x * blockSize.y * 6 ) * sizeof( float );
+	size_t sizeOfSharedMemory = blockSize.x * blockSize.y * sizeof( char6 );
 
-	ClassifyPyramidalFrustumSpheres<<< gridSize, blockSize, sizeOfSharedMemory >>>( ( int6* )planeSphereClassification, frustumCount, sphereCount, out );
+	ClassifyPyramidalFrustumSpheres<<< gridSize, blockSize, sizeOfSharedMemory >>>( ( char6* )planeSphereClassification, frustumCount, sphereCount, out );
+
+	check_cuda_error();
 }
 
 /**
@@ -276,7 +278,7 @@ InverseClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3
 /**
 */
 __global__ void
-ClassifyPlanesSpheres( const float4* planes, const float4* spheres, int planeCount, int sphereCount, int* out )
+ClassifyPlanesSpheres( const float4* planes, const float4* spheres, int planeCount, int sphereCount, char* out )
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -330,24 +332,49 @@ ClassifyPlanesSpheres( const float4* planes, const float4* spheres, int planeCou
 
 	int outIndex = planeCount * y + x;
 
-	if( p >= sharedSpheres[ sphereShIndex ].w ) // distance >= radius
+	if( p > 0 )
 	{
-		out[ outIndex ] = 1; // front
+		// Center back.
+		if( abs( p ) >= sharedSpheres[ sphereShIndex ].w )
+		{
+			out[ outIndex ] = -1; // back
+		}
+		else
+		{
+			out[ outIndex ] = 0; // across
+		}
 	}
-	else if( p <= -sharedSpheres[ sphereShIndex ].w )
+	else // p <= 0
 	{
-		out[ outIndex ] = -1; // back
+		// Center front.
+		if( abs( p ) >= sharedSpheres[ sphereShIndex ].w )
+		{
+			out[ outIndex ] = 1; // front
+		}
+		else
+		{
+			out[ outIndex ] = 0; // across
+		} 
 	}
-	else
-	{
-		out[ outIndex ] = 0; // across
-	}
+
+	//if( p >= sharedSpheres[ sphereShIndex ].w ) // distance >= radius
+	//{
+	//	out[ outIndex ] = 1; // front
+	//}
+	//else if( p <= -sharedSpheres[ sphereShIndex ].w )
+	//{
+	//	out[ outIndex ] = -1; // back
+	//}
+	//else
+	//{
+	//	out[ outIndex ] = 0; // across
+	//}
 }
 
 /**
 */
 __global__ void
-ClassifyPyramidalFrustumSpheres( const int6* planeSphereClassification, int frustumCount, int sphereCount, int* out )
+ClassifyPyramidalFrustumSpheres( const char6* planeSphereClassification, int frustumCount, int sphereCount, int* out )
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -355,14 +382,21 @@ ClassifyPyramidalFrustumSpheres( const int6* planeSphereClassification, int frus
 	if( x >= frustumCount || y >= sphereCount )
 		return;
 
-	extern __shared__ int6 subClassification[];
+	extern __shared__ char6 subClassification[];
 
 	int classShIndex = threadIdx.y * blockDim.x + threadIdx.x;
 
 	// Each thread load six values from the classification to the shared memory.
-	subClassification[ classShIndex ] = planeSphereClassification[ frustumCount * y+ x ];
+	subClassification[ classShIndex ] = planeSphereClassification[ frustumCount * y + x ];
 
 	int outIndex = frustumCount * y + x;
+
+	/*printf( "%d\n", (int)subClassification[ classShIndex ].a );
+	printf( "%d\n", (int)subClassification[ classShIndex ].b );
+	printf( "%d\n", (int)subClassification[ classShIndex ].c );
+	printf( "%d\n", (int)subClassification[ classShIndex ].d );
+	printf( "%d\n", (int)subClassification[ classShIndex ].e );
+	printf( "%d\n", (int)subClassification[ classShIndex ].f );*/
 
 	if( 
 		subClassification[ classShIndex ].a == -1 ||
@@ -388,7 +422,7 @@ ClassifyPyramidalFrustumSpheres( const int6* planeSphereClassification, int frus
 
 		if( count == 0 )
 		{
-			out[ outIndex ] = GCUL_ENCLOSING;
+			out[ outIndex ] = GCUL_INSIDE;
 		}
 		else if( count == 6 )
 		{

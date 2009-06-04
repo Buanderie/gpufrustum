@@ -134,7 +134,7 @@ void __stdcall gculPyramidalFrustumPointers( GCULuint size, GCULenum type, const
 
 /**
 	Specifies data for boxes.
-	A boxes is defined by 8 points.
+	A box is defined by 8 points.
 	A point is defined by 3 coordinates {x, y, z}.
 	@param size		: Specifies the number of boxes.
 	@param type		: Specifies the data type of each coordinate in the
@@ -145,6 +145,20 @@ void __stdcall gculPyramidalFrustumPointers( GCULuint size, GCULenum type, const
 */
 GPUCULLER_API
 void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* pointer );
+
+/**
+	Specifies data for spheres.
+	A sphere is defined by a point and a radius.
+	A point is defined by 3 coordinates {x, y, z}.
+	@param size		: Specifies the number of spheres.
+	@param type		: Specifies the data type of each coordinate in the
+					  array.  Symbolic constants GCU_INT, GCU_FLOAT, 
+					  and GCU_DOUBLE are accepted. 
+	@param pointer	: Specifies a pointer to the first coordinate of the
+					  first sphere in the array.
+*/
+GPUCULLER_API
+void __stdcall gculSpheresPointer( GCULuint size, GCULenum type, const GCULvoid* pointer );
 
 /**
 	Process the frustum culling operation between the frustums array and the boxes array.

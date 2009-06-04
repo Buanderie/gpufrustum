@@ -4,6 +4,7 @@
 #include <vector>
 #include "glPyramidalFrustum.h"
 #include "glAABB.h"
+#include "glSphere.h"
 
 float randf();
 
@@ -29,8 +30,17 @@ void generateRandomAABBs(	int n,
 							std::vector<glAABB>& list
 							);
 
+void generateRandomSpheres(	int n,
+						   float minRadius, float maxRadius,
+						   float minPosX, float maxPosX,
+						   float minPosY, float maxPosY,
+						   float minPosZ, float maxPosZ,
+						   std::vector<glSphere>& list
+						   );
+
 void getFrustumPlanesArray( std::vector<glPyramidalFrustum>& list, float* a );
 void getFrustumCornersArray( std::vector<glPyramidalFrustum> list, float* a );
 void getAABBCornersArray( std::vector<glAABB> list, float* a );
+void getSpheresArray( const std::vector<glSphere>& spheres, float* data );
 
 #endif

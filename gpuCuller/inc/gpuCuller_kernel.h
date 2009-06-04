@@ -12,6 +12,11 @@ struct __align__(16) int6
 	int a, b, c, d, e, f;
 };
 
+struct __align__(4) char6 
+{
+	char a, b, c, d, e, f;
+};
+
 //--------------------
 // Public interface
 //--------------------
@@ -22,9 +27,9 @@ void ClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* 
 
 void InverseClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* frustumCorners, const float* boxPoints, int planeCount, int pointCount, int* out );
 
-void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, const void* spheres, int planeCount, int sphereCount, int* out );
+void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, const void* spheres, int planeCount, int sphereCount, char* out );
 
-void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const int* planeSphereClassification, int frustumCount, int sphereCount, int* out );
+void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const char* planeSphereClassification, int frustumCount, int sphereCount, int* out );
 
 //--------------------
 // Kernels
@@ -40,10 +45,10 @@ __global__ void
 InverseClassifyPyramidalFrustumBoxes( const float3* frustumCorners, const float3* boxPoints, int planeCount, int pointCount, int* out );
 
 __global__ void
-ClassifyPlanesSpheres( const float4* planes, const float4* spheres, int planeCount, int sphereCount, int* out );
+ClassifyPlanesSpheres( const float4* planes, const float4* spheres, int planeCount, int sphereCount, char* out );
 
 __global__ void
-ClassifyPyramidalFrustumSpheres( const int6* planeSphereClassification, int frustumCount, int sphereCount, int* out );
+ClassifyPyramidalFrustumSpheres( const char6* planeSphereClassification, int frustumCount, int sphereCount, int* out );
 
 //--------------------
 // Device functions

@@ -17,15 +17,15 @@ void glSphere::Draw()
 
 	glColor3f( 1.f, 1.f, 1.f );
 
-	glutWireSphere( m_Radius + 0.01f, 10, 10 );
+	glutWireSphere( m_Radius + 0.01f, 8, 8 );
 
 	if( m_IsInsideFrustum )
 	{
-		glColor3f( 1.f, 0.f, 0.f );
+		glColor3f( 0.f, 1.f, 0.f );
 	}
 	else
 	{
-		glColor3f( 0.f, 1.f, 0.f );
+		glColor3f( 1.f, 0.f, 0.f );
 	}
 	
 	glutSolidSphere( m_Radius, 10, 10 );
