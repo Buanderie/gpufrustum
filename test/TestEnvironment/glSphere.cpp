@@ -4,7 +4,8 @@
 glSphere::glSphere( glPoint center, float radius ) :
 	m_Center			( center ),
 	m_Radius			( radius ),
-	m_IsInsideFrustum	( false  )
+	m_IsInsideFrustum	( false  ),
+	m_IsFrustum			( false  )
 {
 
 }
@@ -15,11 +16,22 @@ void glSphere::Draw()
 
 	glTranslatef( m_Center.x, m_Center.y, m_Center.z );
 
-	glColor3f( 1.f, 1.f, 1.f );
+	if( m_IsFrustum )
+	{
+		glColor3f(1.f, 0.f, 0.f);
+	}
+	else
+	{
+		glColor3f( 1.f, 1.f, 1.f );
+	}
 
 	glutWireSphere( m_Radius + 0.01f, 8, 8 );
 
-	if( m_IsInsideFrustum )
+	if( m_IsFrustum )
+	{
+		glColor3f(0.f, 0.f, 1.f);
+	}
+	else if( m_IsInsideFrustum )
 	{
 		glColor3f( 0.f, 1.f, 0.f );
 	}

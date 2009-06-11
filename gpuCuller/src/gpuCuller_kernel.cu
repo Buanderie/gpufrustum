@@ -43,6 +43,15 @@ void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const char*
 	check_cuda_error();
 }
 
+void ClassifySphericalFrustumSpheres( dim3 gridSize, dim3 blockSize, const float* sphericalFrustums, const float* spheres, int frustumCount, int sphereCount, int* out )
+{
+	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 4 ) * sizeof( float );
+
+	ClassifySphericalFrustumSpheres<<< gridSize, blockSize, sizeOfSharedMemory >>>( ( float4* )sphericalFrustums, ( float4* )spheres, frustumCount, sphereCount, out );
+
+	check_cuda_error();
+}
+
 /**
 		p0	   p1     ...  pn	
 	v0 [ i00 ][ i10 ] ... [ in0 ]
@@ -432,6 +441,81 @@ ClassifyPyramidalFrustumSpheres( const char6* planeSphereClassification, int fru
 		{
 			out[ outIndex ] = GCUL_SPANNING;
 		}
+	}
+}
+
+__global__ void
+ClassifySphericalFrustumSpheres( const float4* sphericalFrustums, const float4* spheres, int frustumCount, int sphereCount, int* out )
+{
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	// Exit if out of bounds.
+	if( x >= frustumCount || y >= sphereCount )
+	{
+		return;
+	}
+
+	// Shared memory used to read input data.
+	// Shared memory is only used by same block threads. 
+	// * 0 to m   = planes
+	// * n+1 to n = spheres 
+	// The size of this array must be number_of_threads_per_block * sizeof( float ).
+	extern __shared__ float sharedMemory[];
+
+	float4* sharedFrustums = ( float4* )&sharedMemory[ 0			  ];
+	float4* sharedSpheres  = ( float4* )&sharedMemory[ blockDim.x * 4 ];
+
+	int frustumShIndex  = threadIdx.x;	// offset to the first coordinate of the frustum.
+	int sphereShIndex	= threadIdx.y;	// offset to the first coordinate of the sphere.
+
+	// Only threads which are owned by the first row and the first column load data.
+	if( threadIdx.x == 0 && threadIdx.y == 0 )
+	{
+		// Load the 1st plane and the 1st sphere.
+		sharedFrustums	[ 0 ] = sphericalFrustums	[ x ];
+		sharedSpheres	[ 0 ] = spheres				[ y ];
+	}
+	else if( threadIdx.x == 0 )
+	{
+		// Load the n-th sphere.
+		sharedSpheres[ sphereShIndex ] = spheres[ y ];
+	}
+	else if( threadIdx.y == 0 )
+	{
+		// Load the n-th frustum.
+		sharedFrustums[ frustumShIndex ] = sphericalFrustums[ x ];
+	}
+	
+	// Wait all reading threads.
+	__syncthreads();
+
+	float3 vec = 
+	{
+		sharedSpheres[ sphereShIndex ].x - sharedFrustums[ frustumShIndex ].x,
+		sharedSpheres[ sphereShIndex ].y - sharedFrustums[ frustumShIndex ].y,
+		sharedSpheres[ sphereShIndex ].z - sharedFrustums[ frustumShIndex ].z
+	};
+
+	float distance = sqrt( vec.x * vec.x + vec.y * vec.y + vec.z * vec.z );
+
+	int outIndex = frustumCount * y + x;
+
+	if( distance > sharedSpheres[ sphereShIndex ].w + sharedFrustums[ frustumShIndex ].w )
+	{
+		out[ outIndex ] = GCUL_OUTSIDE;
+	}
+	else if( distance + sharedSpheres[ sphereShIndex ].w < sharedFrustums[ frustumShIndex ].w )
+	{
+		out[ outIndex ] = GCUL_INSIDE;
+	}
+	else if( distance + sharedFrustums[ frustumShIndex ].w < sharedSpheres[ sphereShIndex ].w )
+	{
+		out[ outIndex ] = GCUL_ENCLOSING;
+	}
+	else
+	{
+		out[ outIndex ] = GCUL_SPANNING;
 	}
 }
 

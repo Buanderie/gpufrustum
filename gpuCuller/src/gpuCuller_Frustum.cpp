@@ -9,6 +9,7 @@ extern DeviceFunctionEnv ClassifyPyramidalFrustumBoxesEnv;
 extern DeviceFunctionEnv ClassifyPlanesSpheresEnv;
 extern DeviceFunctionEnv ClassifyPyramidalFrustumSpheresEnv;
 extern DeviceFunctionEnv InverseClassifyPyramidalFrustumBoxesEnv;
+extern DeviceFunctionEnv ClassifySphericalFrustumSpheresEnv;
 
 #define ARRAY_ASSERT()	assert( pointer != NULL,	"Null pointer detected." ); \
 						assert( type == GCUL_INT	|| \
@@ -47,6 +48,20 @@ void __stdcall gculPyramidalFrustumPointers( GCULuint size, GCULenum type, const
 {
 	gculPyramidalFrustumPlanesPointer ( size, type, planes  );
 	gculPyramidalFrustumCornersPointer( size, type, corners );
+}
+
+void __stdcall gculSphericalFrustumPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
+{
+	//--------------------
+	// Pre-conditions
+	ARRAY_ASSERT();
+	//--------------------
+
+	ArrayInfo* info = &ArrayInfos[ GCUL_SPHERICALFRUSTUM_ARRAY ];
+
+	info->size		= size;
+	info->type		= ( GCUL_ArrayDataType )type;
+	info->pointer	= pointer;
 }
 
 void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
@@ -111,6 +126,10 @@ GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 	else if( currentFrustumType == FRUSTUMTYPE_PYRAMIDAL && currentBoundingVolumeType == BOUNDINGVOLUMETYPE_SPHERE )
 	{
 		return ProcessPyramidalFrustumSphereCulling( result );
+	}
+	else if( currentFrustumType == FRUSTUMTYPE_SPHERICAL && currentBoundingVolumeType == BOUNDINGVOLUMETYPE_SPHERE )
+	{
+		return ProcessSphericalFrustumSphereCulling( result );
 	}
 	else
 	{
@@ -390,6 +409,79 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 	FreeDeviceMemory( resultDeviceMemory );
 
 	//--------------------
+
+	return 0;
+}
+
+int ProcessSphericalFrustumSphereCulling( GCUL_Classification* result )
+{
+	// Allocate spherical frustums on device memory.
+	const ArrayInfo&	frustumInfo	= ArrayInfos[ GCUL_SPHERICALFRUSTUM_ARRAY ];
+	GCULvoid*			frustums	= NULL;
+
+	AllocArrayDeviceMemory( &frustums, frustumInfo );
+
+	if( frustums == NULL )
+	{
+		assert( false, "Can not allocate device memory for spherical frustum." );
+		return -1;
+	}
+
+	// Allocate bounding volumes on device memory.
+	const ArrayInfo&	boundingSpheresInfo	= ArrayInfos[ GCUL_BSPHERES_ARRAY ];
+	GCULvoid*			boundingSpheres		= NULL;
+
+	AllocArrayDeviceMemory( &boundingSpheres, boundingSpheresInfo );
+
+	if( boundingSpheres == NULL )
+	{
+		assert( false, "Can not allocate device memory for bounding volumes." );
+		return -1;
+	}
+
+	// Initialize input data on device memory.
+	CopyArrayToDeviceMemory( frustums,			frustumInfo			);
+	CopyArrayToDeviceMemory( boundingSpheres,	boundingSpheresInfo );
+
+	// Allocate the result matrix on device memory.
+	GCULvoid* resultDeviceMemory = NULL;	
+	AllocResultDeviceMemory( &resultDeviceMemory, frustumInfo, boundingSpheresInfo );
+
+	dim3 dimBlock1stPass;
+	dim3 dimGrid1stPass;
+
+	int frustumCount = frustumInfo.size;
+	int sphereCount  = boundingSpheresInfo.size;
+
+	ComputeGridSizes( 
+		frustumCount, 
+		sphereCount, 
+		ClassifySphericalFrustumSpheresEnv.desiredThreadPerBlock,
+		dimGrid1stPass.x, 
+		dimGrid1stPass.y, 
+		dimBlock1stPass.x, 
+		dimBlock1stPass.y 
+		);
+
+	// Process first pass : intersect each plane with each box point.
+	ClassifySphericalFrustumSpheres( 
+		dimGrid1stPass,
+		dimBlock1stPass,
+		( float* )frustums, 
+		( float* )boundingSpheres, 
+		frustumCount, 
+		sphereCount, 
+		( int* )resultDeviceMemory 
+		);
+
+	// Free device input memory.
+	FreeDeviceMemory( frustums		  );
+	FreeDeviceMemory( boundingSpheres );
+
+	// Copy the result from device memory.
+	cutilSafeCall( cudaMemcpy( result, resultDeviceMemory, frustumCount * sphereCount * sizeof(int), cudaMemcpyDeviceToHost ) );
+
+	FreeDeviceMemory( resultDeviceMemory );
 
 	return 0;
 }

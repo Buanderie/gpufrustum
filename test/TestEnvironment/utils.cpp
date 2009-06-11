@@ -67,8 +67,6 @@ void generateRandomSpheres(	int n,
 						 std::vector<glSphere>& list
 							)
 {
-	sf::Randomizer::SetSeed( 11 );
-
 	for( int i = 0; i < n; ++i )
 	{
 		float radius	= sf::Randomizer::Random( minRadius,	maxRadius	);
@@ -106,7 +104,6 @@ void getAABBCornersArray( std::vector<glAABB> list, float* a )
 
 void getSpheresArray( const std::vector<glSphere>& spheres, float* data )
 {
-	sf::Randomizer::SetSeed( 10 );
 	for(int i = 0; i < spheres.size(); ++i )
 	{
 		int index = i * 4;

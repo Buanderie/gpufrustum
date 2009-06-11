@@ -133,6 +133,20 @@ GPUCULLER_API
 void __stdcall gculPyramidalFrustumPointers( GCULuint size, GCULenum type, const GCULvoid* planes, const GCULvoid* corners );
 
 /**
+	Specifies spheres for spherical frustums.
+	A frustum is defined by 1 center and 1 radius.
+	A center is defined by 3 coordinates {x, y, z}.
+	@param size		: Specifies the number of spherical frustums.
+	@param type		: Specifies the data type of each coordinate in the
+					  array.  Symbolic constants GCU_INT, GCU_FLOAT, 
+					  and GCU_DOUBLE are accepted. 
+	@param pointer	: Specifies a pointer to the first coordinate of the
+					  first sphere in the array.
+*/
+GPUCULLER_API
+void __stdcall gculSphericalFrustumPointer( GCULuint size, GCULenum type, const GCULvoid* pointer );
+
+/**
 	Specifies data for boxes.
 	A box is defined by 8 points.
 	A point is defined by 3 coordinates {x, y, z}.

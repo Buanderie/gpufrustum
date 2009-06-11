@@ -52,3 +52,10 @@ DeviceFunctionEnv ClassifyPyramidalFrustumSpheresEnv =
 	32,
 	256
 };
+
+DeviceFunctionEnv ClassifySphericalFrustumSpheresEnv =
+{
+	8,
+	32,
+	256
+};

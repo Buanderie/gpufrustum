@@ -7,9 +7,12 @@
 #include <vector>
 #include <sstream>
 #include <istream>
+#include <math.h>
 
 #define WORLD_DIM					1000.f
 #define TESTS_PER_CLASSIFICATION	5
+
+float RunBench( int frustumCount, int boxCount );
 
 template<typename T>
 bool FromString(const std::string & source, T & dest)
@@ -20,23 +23,90 @@ bool FromString(const std::string & source, T & dest)
 }
 
 int main( int argc, char** argv )
-{
-	int frustumStart, frustumEnd, frustumInc;
-	int boxStart, boxEnd, boxInc;
+{	
+	gculInitialize( 1, argv );
 
-	if( argc != 7 )
+	if( argc != 3 )
 	{
 		return -1;
 	}
 
-	// Read parameters
-	FromString( argv[ 1 ], frustumStart	);
-	FromString( argv[ 2 ], frustumEnd	);
-	FromString( argv[ 3 ], frustumInc	);
-	FromString( argv[ 4 ], boxStart		);
-	FromString( argv[ 5 ], boxEnd		);
-	FromString( argv[ 6 ], boxInc		);
-	
+	int powBoxes;
+	int powFrustums;
+
+	FromString( argv[ 1 ], powBoxes		);
+	FromString( argv[ 2 ], powFrustums	);
+
+	std::vector<float> result;
+
+	for( int i = 0; i < powFrustums; ++i )
+	{
+		int fmin = ( int )pow( 10.f, i     );
+		int fmax = ( int )pow( 10.f, i + 1 );
+		int fpas = fmin;
+
+		for( int j = 0; j < powBoxes; ++j )
+		{
+			int bmin = ( int )pow( 10.f, j     );
+			int bmax = ( int )pow( 10.f, j + 1 );
+			int bpas = bmin;
+
+			for( int f = fmin; f <= fmax ; f += fpas )
+			{
+				for( int b = bmin; b <= bmax ; b += bpas )
+				{
+					result.push_back( RunBench( f, b ) );
+				}
+			}
+		}
+	}
+
+	// write x axis
+	for( int i = 0; i < powFrustums; ++i )
+	{
+		int fmin = ( int )pow( 10.f, i     );
+		int fmax = ( int )pow( 10.f, i + 1 );
+		int fpas = fmin;
+
+		for( int f = fmin; f <= fmax ; f += fpas )
+		{
+			std::cout << f << ";";
+		}
+	}
+
+	std::cout << std::endl;
+
+	// write y axis
+	for( int i = 0; i < powBoxes; ++i )
+	{
+		int bmin = ( int )pow( 10.f, i     );
+		int bmax = ( int )pow( 10.f, i + 1 );
+		int bpas = bmin;
+
+		for( int b = bmin; b <= bmax ; b += bpas )
+		{
+			std::cout << b << ";";
+		}
+	}
+
+	std::cout << std::endl;
+
+	// write result
+	int column = 0;
+	for( int i = 0; i < result.size(); ++i )
+	{
+		if( column >= powFrustums * 10 )
+		{
+			std::cout << std::endl;
+			column = 0;
+		}
+		std::cout << result[ i ] << ";";
+		++column;
+	}
+}
+
+float RunBench( int frustumCount, int boxCount )
+{
 	Bench::PyrFrustumConstGenerator frustumGenerator( WORLD_DIM, WORLD_DIM );
 	Bench::AABoxConstGenerator		boxGenerator	( WORLD_DIM, WORLD_DIM );
 
@@ -44,59 +114,44 @@ int main( int argc, char** argv )
 
 	boxGenerator.SetBoxDimensions( 5.f, 5.f, 5.f );
 
-	int planeSize	=  frustumEnd * 6 * 4;
-	int cornerSize	=  frustumEnd * 8 * 4; 
+	int planeSize	=  frustumCount * 6 * 4;
+	int cornerSize	=  frustumCount * 8 * 4; 
 
 	float* frustumData	= new float[ planeSize + cornerSize ];
-	float* boxData		= new float[ boxEnd * 8 * 4			];
+	float* boxData		= new float[ boxCount * 8 * 4		];
 
-	gculInitialize( 1, argv );
+	GCUL_Classification* result = new GCUL_Classification[ frustumCount * boxCount ];
 
-	for( int i = frustumStart; i <= frustumEnd ; i += frustumInc )
+	float totalDuration	= 0.f;
+
+	for( int k = 0; k < TESTS_PER_CLASSIFICATION; ++k )
 	{
-		for( int j = boxStart; j <= boxEnd ; j += boxInc )
-		{
-			GCUL_Classification* result = new GCUL_Classification[ i * j ];
+		frustumGenerator.Generate( frustumCount, frustumData );
 
-			float totalDuration	= 0.f;
+		boxGenerator.Generate( boxCount, boxData );
 
-			for( int k = 0; k < TESTS_PER_CLASSIFICATION; ++k )
-			{
-				frustumGenerator.Generate( i, frustumData );
+		gculBoxesPointer( boxCount, GCUL_FLOAT, boxData );
 
-				boxGenerator.Generate( j, boxData );
+		gculPyramidalFrustumPlanesPointer ( frustumCount, GCUL_FLOAT, frustumData							);
+		gculPyramidalFrustumCornersPointer( frustumCount, GCUL_FLOAT, &frustumData[ frustumCount * 6 * 4 ]	);
 
-				gculBoxesPointer( j, GCUL_FLOAT, boxData );
+		gculEnableArray( GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+		gculEnableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY	);
 
-				gculPyramidalFrustumPlanesPointer ( i, GCUL_FLOAT, frustumData					);
-				gculPyramidalFrustumCornersPointer( i, GCUL_FLOAT, &frustumData[ i * 6 * 4 ]	);
+		gculEnableArray( GCUL_BBOXES_ARRAY );
 
-				gculEnableArray( GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
-				gculEnableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY	);
+		sf::Clock timer; timer.Reset();
 
-				gculEnableArray( GCUL_BBOXES_ARRAY );
+		gculProcessFrustumCulling( result );
 
-				sf::Clock timer; timer.Reset();
+		float duration = timer.GetElapsedTime();
 
-				gculProcessFrustumCulling( result );
-
-				float duration = timer.GetElapsedTime();
-
-				totalDuration += duration;
-			}
-
-			std::cout
-			<< 
-				"Frustums = " << i << 
-				" Boxes = "  << j << 
-				" Duration = " << totalDuration / TESTS_PER_CLASSIFICATION << "s" 
-			<< 
-			std::endl;
-
-			delete[] result;
-		}
+		totalDuration += duration;
 	}
 
+	delete[] result;
 	delete[] boxData;
 	delete[] frustumData;
+
+	return totalDuration;
 }

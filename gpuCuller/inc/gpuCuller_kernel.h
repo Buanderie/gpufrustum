@@ -12,7 +12,7 @@ struct __align__(16) int6
 	int a, b, c, d, e, f;
 };
 
-struct __align__(4) char6 
+struct char6 
 {
 	char a, b, c, d, e, f;
 };
@@ -30,6 +30,8 @@ void InverseClassifyPyramidalFrustumBoxes( dim3 gridSize, dim3 blockSize, const 
 void ClassifyPlanesSpheres( dim3 gridSize, dim3 blockSize, const void* planes, const void* spheres, int planeCount, int sphereCount, char* out );
 
 void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const char* planeSphereClassification, int frustumCount, int sphereCount, int* out );
+
+void ClassifySphericalFrustumSpheres( dim3 gridSize, dim3 blockSize, const float* sphericalFrustums, const float* spheres, int frustumCount, int sphereCount, int* out );
 
 //--------------------
 // Kernels
@@ -49,6 +51,9 @@ ClassifyPlanesSpheres( const float4* planes, const float4* spheres, int planeCou
 
 __global__ void
 ClassifyPyramidalFrustumSpheres( const char6* planeSphereClassification, int frustumCount, int sphereCount, int* out );
+
+__global__ void
+ClassifySphericalFrustumSpheres( const float4* sphericalFrustums, const float4* spheres, int frustumCount, int sphereCount, int* out );
 
 //--------------------
 // Device functions

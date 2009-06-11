@@ -222,6 +222,10 @@
 					RelativePath=".\PyrFrustumGenerator.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\Save.txt"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

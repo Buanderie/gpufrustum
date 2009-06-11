@@ -20,10 +20,13 @@ public:
 
 	void SetInsideFrustum( bool value ) { m_IsInsideFrustum = value; }
 
+	void SetFrustum( bool value ) { m_IsFrustum = value; }
+
 private:
 
 	glPoint m_Center;
 	float	m_Radius;
 	bool	m_IsInsideFrustum;
+	bool	m_IsFrustum;
 
 };
