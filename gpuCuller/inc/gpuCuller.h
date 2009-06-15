@@ -64,6 +64,12 @@ enum GCUL_Array
 	GCUL_END_ARRAY				
 }; 
 
+enum GCUL_EnableState
+{
+	GCUL_OCCLUSION_CULLING = 0,				
+	GCUL_END_ENABLESTATE				
+};
+
 //--------------------
 // Functions
 //--------------------
@@ -74,6 +80,20 @@ enum GCUL_Array
 */
 GPUCULLER_API
 void __stdcall gculInitialize( int argc, char** argv );
+
+/**
+	Return true if the given array is enabled. False otherwise.
+	Symbolic constants GCU_BOXES_ARRAY, GCUL_BSPHERES_ARRAY, GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY, GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY and GCU_SPHERICALFRUSTUM_ARRAY are accepted. 
+*/
+GPUCULLER_API
+void __stdcall gculEnable( GCUL_EnableState state );
+
+/**
+	Return true if the given array is enabled. False otherwise.
+	Symbolic constants GCU_BOXES_ARRAY, GCUL_BSPHERES_ARRAY, GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY, GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY and GCU_SPHERICALFRUSTUM_ARRAY are accepted. 
+*/
+GPUCULLER_API
+void __stdcall gculDisable( GCUL_EnableState state );
 
 /**
 	Specifies the array to enable.

@@ -17,6 +17,7 @@ struct char6
 	char a, b, c, d, e, f;
 };
 
+
 //--------------------
 // Public interface
 //--------------------
@@ -33,6 +34,7 @@ void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const char*
 
 void ClassifySphericalFrustumSpheres( dim3 gridSize, dim3 blockSize, const float* sphericalFrustums, const float* spheres, int frustumCount, int sphereCount, int* out );
 
+void GenerateOcclusionRay( dim3 gridSize, dim3 blockSize, float* boxPoints, const float* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, const int* classificationResult, occlusionray_t* rayData );
 //--------------------
 // Kernels
 //--------------------
@@ -55,6 +57,8 @@ ClassifyPyramidalFrustumSpheres( const char6* planeSphereClassification, int fru
 __global__ void
 ClassifySphericalFrustumSpheres( const float4* sphericalFrustums, const float4* spheres, int frustumCount, int sphereCount, int* out );
 
+__global__ void
+GenerateOcclusionRay( const float* boxPoints, const float3* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, const int* classificationResult, occlusionray_t* rayData );
 //--------------------
 // Device functions
 //--------------------
@@ -70,6 +74,18 @@ UpperPoint( const float3* box );
 
 __device__ float3
 LowerPoint( const float3* box );
+
+__device__ float3
+ScaleVector( float3 vec, float scale );
+
+__device__ float3
+ComputeVector( float3 pointA, float3 pointB );
+
+__device__ float
+ComputeVectorNorm( float3 vec );
+
+__device__ bool
+RayAABBIntersect( float3 raystart, float3 raydir, float3 m1, float3 m2, float tmin, float tmax);
 
 
 #endif // __GPUCULLER_KERNEL_H__

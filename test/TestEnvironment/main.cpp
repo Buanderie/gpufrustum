@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 		//nFrustum = 124;
 		//nAABB = 357;
 		nFrustum = 10;
-		nSpheres = 100;
+		nSpheres = 10;
 		nAABB = 100;
 		nSphericalFrustums = 10;
 	}
@@ -135,25 +135,24 @@ int main(int argc, char** argv)
 
 	//Initialize gpuCuller
 	gculInitialize( argc, argv );
-	gculDisableArray( GCUL_SPHERICALFRUSTUM_ARRAY );
-	//gculDisableArray( GCUL_BSPHERES_ARRAY );
-	//gculDisableArray( GCUL_BBOXES_ARRAY );
+
+	gculEnable(GCUL_OCCLUSION_CULLING);
 
 	//Initialize data	
 	//Add n frustum
 	gculPyramidalFrustumCornersPointer( nFrustum, GCUL_FLOAT,frustumCornersData );
 	gculPyramidalFrustumPlanesPointer( nFrustum, GCUL_FLOAT, frustumPlanesData );
-	gculSphericalFrustumPointer( nSphericalFrustums, GCUL_FLOAT, sphericalFrustumData );
+	//gculSphericalFrustumPointer( nSphericalFrustums, GCUL_FLOAT, sphericalFrustumData );
 	
 	//Add m AABB
 	gculBoxesPointer( nAABB, GCUL_FLOAT, aabbCornersData );
-	gculSpheresPointer( nSpheres, GCUL_FLOAT, spheresData );
+	//gculSpheresPointer( nSpheres, GCUL_FLOAT, spheresData );
 
 	//Prepare output
 	gculResultsBoxes	= new GCUL_Classification[nFrustum * nAABB	 ];
-	gculResultsSpheres	= new GCUL_Classification[nFrustum * nSpheres];
+	//gculResultsSpheres	= new GCUL_Classification[nFrustum * nSpheres];
 	
-	gculResultsSphericalFrustumsSpheres = new GCUL_Classification[nSphericalFrustums * nSpheres];
+	//gculResultsSphericalFrustumsSpheres = new GCUL_Classification[nSphericalFrustums * nSpheres];
 	//
 
 
@@ -162,29 +161,18 @@ int main(int argc, char** argv)
     {
 		//Frustum Culling
 		Clock.Reset();
-		
-		
-		gculDisableArray( GCUL_BBOXES_ARRAY );
-		gculDisableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
-		gculDisableArray( GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
-		gculDisableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
 
-		gculEnableArray( GCUL_BSPHERES_ARRAY );
-		gculEnableArray( GCUL_SPHERICALFRUSTUM_ARRAY );
-
-		gculProcessFrustumCulling( gculResultsSphericalFrustumsSpheres );
-
-		//gculEnableArray( GCUL_BBOXES_ARRAY );
-		//gculDisableArray( GCUL_BSPHERES_ARRAY );
-
-		//gculProcessFrustumCulling( gculResultsBoxes );
+		gculEnableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+		gculEnableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
+		gculEnableArray( GCUL_Array::GCUL_BBOXES_ARRAY );
+		gculProcessFrustumCulling( gculResultsBoxes );
 
 		float t = Clock.GetElapsedTime();
 		float cullingpersecond = ( nFrustum * nAABB + nFrustum * nSpheres )/ t;
 
 		printf("delta_t = %f ms | %fM culling operations per second\n", t * 1000.0f, cullingpersecond / 1000000.0f );
  
-		for( int i = 0; i < nSpheres; ++i )
+		/*for( int i = 0; i < nSpheres; ++i )
 		{
 			for(int j = 0; j < nSphericalFrustums; ++j)
 			{
@@ -195,6 +183,7 @@ int main(int argc, char** argv)
 				}
 			}
 		}
+		*/
 
 
 		//for(int i = 0; i < nSpheres; ++i)
@@ -210,18 +199,18 @@ int main(int argc, char** argv)
 		//	}
 		//}
 
-		//for(int i = 0; i < nAABB; ++i)
-		//{
-		//	for(int j = 0; j < nFrustum; ++j)
-		//	{
-		//		if( gculResultsBoxes[nFrustum*i + j] == GCUL_INSIDE || gculResultsBoxes[nFrustum*i + j] == GCUL_SPANNING )
-		//		{
-		//			aabbList[i].isInsideFrustum = true;
-		//			//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResults[nFrustum*i +j]);
-		//		}		
-		//	}
-		//	//printf("\r\n");
-		//}
+		for(int i = 0; i < nAABB; ++i)
+		{
+			for(int j = 0; j < nFrustum; ++j)
+			{
+				if( gculResultsBoxes[nFrustum*i + j] == GCUL_INSIDE || gculResultsBoxes[nFrustum*i + j] == GCUL_SPANNING )
+				{
+	 				aabbList[i].isInsideFrustum = true;
+					//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResults[nFrustum*i +j]);
+				}		
+			}
+			//printf("\r\n");
+		}
 		
 
 
@@ -281,14 +270,14 @@ int main(int argc, char** argv)
 		drawFloorGrid( );
 
 		//display the frustums
-	/*	for(int i = 0; i < frustumList.size(); ++i )
-			frustumList[i].draw();*/
+		for(int i = 0; i < frustumList.size(); ++i )
+			frustumList[i].draw();
 
 		//Display an AABB
-		/*for(int i = 0; i < aabbList.size(); ++i )
-			aabbList[i].draw();*/
+		for(int i = 0; i < aabbList.size(); ++i )
+			aabbList[i].draw();
 
-		for( int i = 0; i < sphereList.size(); ++i )
+		/*for( int i = 0; i < sphereList.size(); ++i )
 		{
 			sphereList[ i ].Draw();
 		}
@@ -297,7 +286,7 @@ int main(int argc, char** argv)
 		{
 			sphericalFrustumList[ i ].SetFrustum( true );
 			sphericalFrustumList[ i ].Draw();
-		}
+		}*/
 
         // Finally, display rendered frame on screen
         App.Display();

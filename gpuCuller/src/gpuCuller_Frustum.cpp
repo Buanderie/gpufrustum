@@ -1,8 +1,11 @@
 #include <gpuCuller_internal.h>
 #include <cutil_inline.h>
+#include <gpuCuller_BVH.h>
 #include <gpuCuller_kernel.h>
 
 extern ArrayInfo ArrayInfos[ GCUL_END_ARRAY ];
+
+extern bool EnableStates[ GCUL_END_ENABLESTATE ];
 
 extern DeviceFunctionEnv ClassifyPlanesPointsEnv;
 extern DeviceFunctionEnv ClassifyPyramidalFrustumBoxesEnv;
@@ -10,6 +13,8 @@ extern DeviceFunctionEnv ClassifyPlanesSpheresEnv;
 extern DeviceFunctionEnv ClassifyPyramidalFrustumSpheresEnv;
 extern DeviceFunctionEnv InverseClassifyPyramidalFrustumBoxesEnv;
 extern DeviceFunctionEnv ClassifySphericalFrustumSpheresEnv;
+
+BVHTree* tree;
 
 #define ARRAY_ASSERT()	assert( pointer != NULL,	"Null pointer detected." ); \
 						assert( type == GCUL_INT	|| \
@@ -28,6 +33,7 @@ void __stdcall gculPyramidalFrustumPlanesPointer( GCULuint size, GCULenum type, 
 	info->size		= size;
 	info->type		= ( GCUL_ArrayDataType )type;
 	info->pointer	= pointer;
+
 }
 
 void __stdcall gculPyramidalFrustumCornersPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
@@ -76,6 +82,9 @@ void __stdcall gculBoxesPointer( GCULuint size, GCULenum type, const GCULvoid* p
 	info->size		= size;
 	info->type		= ( GCUL_ArrayDataType )type;
 	info->pointer	= pointer;
+
+	tree = new BVHTree();
+	tree->buildFromAABBList((aabb_bvh_t*)pointer, size);
 }
 
 void __stdcall gculSpheresPointer( GCULuint size, GCULenum type, const GCULvoid* pointer )
@@ -278,6 +287,13 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		(int*)resultDeviceMemory 
 	);
 //// THIRD PASS //////////////////////////////////////////////////////////////
+	
+	//If occlusion cullng is enabled, process it.
+	if( EnableStates[GCUL_OCCLUSION_CULLING] )
+	{
+		int ret = ProcessPyramidalFrustumAABBOcclusionCulling((float*)boundingBoxes, (float*)frustumsCorners, boxCount, frustumCount, 10, 10, (int*)resultDeviceMemory);
+	}
+	//
 
 	// Free device input memory.
 	FreeDeviceMemory( frustumsCorners		 );

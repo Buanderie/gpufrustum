@@ -52,6 +52,11 @@ void ClassifySphericalFrustumSpheres( dim3 gridSize, dim3 blockSize, const float
 	check_cuda_error();
 }
 
+void GenerateOcclusionRay( dim3 gridSize, dim3 blockSize, float* boxPoints, const float* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, const int* classificationResult, occlusionray_t* rayData )
+{
+	GenerateOcclusionRay<<< gridSize, blockSize >>>( boxPoints, ( float3* )frustumCorners, boxCount, frustumCount, rayCoverageWidth, rayCoverageHeight, classificationResult, rayData ); 
+}
+
 /**
 		p0	   p1     ...  pn	
 	v0 [ i00 ][ i10 ] ... [ in0 ]
@@ -519,6 +524,73 @@ ClassifySphericalFrustumSpheres( const float4* sphericalFrustums, const float4* 
 	}
 }
 
+__global__ void
+GenerateOcclusionRay( const float* boxPoints, const float3* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, const int* classificationResult, occlusionray_t* rayData )
+{
+	int findex = blockIdx.x;
+	int rayx = threadIdx.x;
+	int rayy = threadIdx.y;
+	int frustumoffset = 8*findex;
+
+	int nbRay = rayCoverageWidth * rayCoverageHeight;
+
+	float3 nearUpLeft = frustumCorners[ frustumoffset + 0 ];
+	float3 nearUpRight = frustumCorners[ frustumoffset + 1 ];
+	float3 nearDownLeft = frustumCorners[ frustumoffset + 2 ];
+
+	float3 farUpLeft = frustumCorners[ frustumoffset + 4 ];
+	float3 farUpRight = frustumCorners[ frustumoffset + 5 ];
+	float3 farDownLeft = frustumCorners[ frustumoffset + 6 ];
+
+	float xscale = (float)rayx / (float)rayCoverageWidth;
+	float yscale = (float)rayy / (float)rayCoverageHeight;
+
+	float3 vecNearDown = ScaleVector( ComputeVector( nearUpLeft, nearDownLeft ), yscale );
+	float3 vecNearRight = ScaleVector( ComputeVector( nearUpLeft, nearUpRight ), xscale );
+	float3 vecFarDown = ScaleVector( ComputeVector( farUpLeft, farDownLeft ), yscale );
+	float3 vecFarRight = ScaleVector( ComputeVector( farUpLeft, farUpRight ), xscale );
+	
+	float3 startpoint, endpoint;
+	startpoint = nearUpLeft;
+	startpoint.x = nearUpLeft.x + vecNearDown.x + vecNearRight.x;
+	startpoint.y = nearUpLeft.y + vecNearDown.y + vecNearRight.y;
+	startpoint.z = nearUpLeft.z + vecNearDown.z + vecNearRight.z;
+	endpoint.x = farUpLeft.x + vecFarDown.x + vecFarRight.x;
+	endpoint.y = farUpLeft.y + vecFarDown.y + vecFarRight.y;
+	endpoint.z = farUpLeft.z + vecFarDown.z + vecFarRight.z;
+
+	float3 dir = ComputeVector( startpoint, endpoint );
+	dir = ScaleVector( dir, 1.0/ComputeVectorNorm( dir ) );
+	rayData[ nbRay * findex + rayCoverageWidth*rayy + rayx ].start.x = startpoint.x;
+	rayData[ 0 ].dir = dir;
+}
+
+__device__ float3
+ScaleVector( float3 vec, float scale )
+{
+	float3 ret;
+	ret.x = vec.x * scale;
+	ret.y = vec.y * scale;
+	ret.z = vec.z * scale;
+	return ret;
+}
+
+__device__ float3
+ComputeVector( float3 pointA, float3 pointB )
+{
+	float3 ret;
+	ret.x = pointB.x - pointA.x;
+	ret.y = pointB.y - pointA.y;
+	ret.z = pointB.z - pointA.z;
+	return ret;
+}
+
+__device__ float
+ComputeVectorNorm( float3 vec )
+{
+	return sqrt( vec.x*vec.x + vec.y*vec.y + vec.z*vec.z );
+}
+
 __device__ int 
 SumArrayElements( const int* array, int elementCount )
 {
@@ -578,4 +650,52 @@ CountArrayElementValue( const int* array, int elementCount, int elementValue )
 		}
 	}
 	return count;
+}
+
+__device__ bool
+RayAABBIntersect( float3 raystart, float3 raydir, float3 m1, float3 m2, float tmin, float tmax)
+{
+   float tymin, tymax, tzmin, tzmax; 
+   float flag = 1.0; 
+ 
+    if (raydir.x >= 0) 
+    {
+		 tmin = (m1.x - raystart.x) / raydir.x;
+         tmax = (m2.x - raystart.x) / raydir.x;
+    }
+    else 
+    {
+       tmin = (m2.x - raystart.x) / raydir.x;
+       tmax = (m1.x - raystart.x) / raydir.x;
+    }
+    if (raydir.y >= 0) 
+    {
+       tymin = (m1.y - raystart.y) / raydir.y; 
+       tymax = (m2.y - raystart.y) / raydir.y; 
+    }
+    else 
+    {
+       tymin = (m2.y - raystart.y) / raydir.y; 
+       tymax = (m1.y - raystart.y) / raydir.y; 
+    }
+     
+    if ((tmin > tymax) || (tymin > tmax)) flag = -1.0; 
+    if (tymin > tmin) tmin = tymin; 
+    if (tymax < tmax) tmax = tymax; 
+      
+    if (raydir.z >= 0) 
+    {
+       tzmin = (m1.z - raystart.z) / raydir.z; 
+       tzmax = (m2.z - raystart.z) / raydir.z; 
+    }
+    else 
+    {
+       tzmin = (m2.z - raystart.z) / raydir.z; 
+       tzmax = (m1.z - raystart.z) / raydir.z; 
+    }
+    if ((tmin > tzmax) || (tzmin > tmax)) flag = -1.0; 
+    if (tzmin > tmin) tmin = tzmin; 
+    if (tzmax < tmax) tmax = tzmax; 
+      
+    return (flag > 0); 
 }

@@ -3,6 +3,7 @@
 #include <cfloat>
 
 extern bool ArrayStates[ GCUL_END_ARRAY ];
+extern bool EnableStates[ GCUL_END_ENABLESTATE ];
 
 void __stdcall gculInitialize( int argc, char** argv )
 {
@@ -11,6 +12,22 @@ void __stdcall gculInitialize( int argc, char** argv )
 		cutilDeviceInit(argc, argv);
 	else
 		cudaSetDevice( cutGetMaxGflopsDeviceId() );
+}
+
+void __stdcall gculEnable( GCUL_EnableState state )
+{
+	if( state < GCUL_END_ENABLESTATE )
+	{
+		EnableStates[ state ] = true;
+	}
+}
+
+void __stdcall gculDisable( GCUL_EnableState state )
+{
+	if( state < GCUL_END_ENABLESTATE )
+	{
+		EnableStates[ state ] = false;
+	}
 }
 
 void __stdcall gculEnableArray( GCUL_Array array )

@@ -9,6 +9,11 @@ bool ArrayStates[ GCUL_END_ARRAY ] =
 	false	// GCUL_SPHERICALFRUSTUM_ARRAY
 };
 
+bool EnableStates[ GCUL_END_ENABLESTATE ] = 
+{
+	false	// GCUL_OCCLUSION_CULLING
+};
+
 ArrayInfo ArrayInfos[ GCUL_END_ARRAY ] = 
 {
 	UndefinedArrayInfo( 24 ),	// GCU_BOXES_ARRAY						24 = 8 corners * 3 coordinates

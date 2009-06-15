@@ -2,6 +2,7 @@
 #define __GPUCULLER_INTERNAL_H__
 
 #include <gpuCuller.h>
+#include <cutil_inline.h>
 #include <iostream>
 #include <windows.h>
 
@@ -53,6 +54,13 @@ struct DeviceFunctionEnv
 	unsigned int desiredThreadPerBlock;
 };
 
+
+typedef struct occlusionray
+{
+	float3 start;
+	float3 dir;
+} occlusionray_t;
+
 //--------------------
 // Functions
 //--------------------
@@ -76,6 +84,8 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result );
 int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result );
 
 int ProcessSphericalFrustumSphereCulling( GCUL_Classification* result );
+
+int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, int* classificationResult);
 
 void ComputeGridSizes( int threadWidth, int threadHeight, int desiredThreadPerBlock, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY );
 

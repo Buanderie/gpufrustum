@@ -37,6 +37,7 @@
 				Arch="11"
 				Emulation="false"
 				ExtraNvccOptions="-keep"
+				Warning="3"
 				Optimization="0"
 			/>
 			<Tool
@@ -55,6 +56,7 @@
 				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
 				PreprocessorDefinitions="WIN32;_WINDOWS;DLL"
 				MinimalRebuild="true"
+				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="3"

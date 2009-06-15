@@ -10,6 +10,8 @@ void main( int argc, char** argv)
 	gculDisableArray( GCUL_SPHERICALFRUSTUM_ARRAY );
 	gculDisableArray( GCUL_BSPHERES_ARRAY );
 
+	gculEnable( GCUL_OCCLUSION_CULLING );
+
 	//Initialize data	
 	//Add 1 frustum
 	gculEnableArray( GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
