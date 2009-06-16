@@ -287,11 +287,14 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 		(int*)resultDeviceMemory 
 	);
 //// THIRD PASS //////////////////////////////////////////////////////////////
-	
+
+	// Copy the result from device memory.
+	cutilSafeCall(cudaMemcpy( result, resultDeviceMemory, frustumPlanesInfo.size * boundingBoxesInfo.size * sizeof(int), cudaMemcpyDeviceToHost));
+
 	//If occlusion cullng is enabled, process it.
 	if( EnableStates[GCUL_OCCLUSION_CULLING] )
 	{
-		int ret = ProcessPyramidalFrustumAABBOcclusionCulling((float*)boundingBoxes, (float*)frustumsCorners, boxCount, frustumCount, 10, 10, (int*)resultDeviceMemory);
+		int ret = ProcessPyramidalFrustumAABBOcclusionCulling((float*)boundingBoxes, (float*)frustumsCorners, boxCount, frustumCount, 10, 10, (int*)resultDeviceMemory, (int*)result);
 	}
 	//
 
@@ -299,9 +302,6 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	FreeDeviceMemory( frustumsCorners		 );
 	FreeDeviceMemory( boundingBoxes			 );
 	FreeDeviceMemory( pointPlaneIntersection );
-
-	// Copy the result from device memory.
-	cutilSafeCall(cudaMemcpy( result, resultDeviceMemory, frustumPlanesInfo.size * boundingBoxesInfo.size * sizeof(int), cudaMemcpyDeviceToHost));
 
 	FreeDeviceMemory( resultDeviceMemory );
 

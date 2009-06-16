@@ -74,15 +74,33 @@ int main(int argc, char** argv)
 	{
 		//nFrustum = 124;
 		//nAABB = 357;
-		nFrustum = 10;
+		nFrustum = 1;
 		nSpheres = 10;
-		nAABB = 100;
+		nAABB = 8;
 		nSphericalFrustums = 10;
 	}
 
-	//srand( time( NULL ) );
-	srand( 10 );
+	srand( time( NULL ) );
+	//srand( 10 );
 
+	glAABB a1(glVector4f(-3,-4,9,1), glVector4f(5,4,13,1));
+	glAABB a2(glVector4f(-3,-4,14,1), glVector4f(5,4,18,1));
+	glAABB a3(glVector4f(-3,-4,18,1), glVector4f(5,4,22,1));
+	glPyramidalFrustum frus(90.0f, 1.0f, 50.0f, 0.75f, glVector4f(0,0,0,0), 0, 0, 0);
+	aabbList.push_back(a1);
+	aabbList.push_back(a2);
+	aabbList.push_back(a3);
+	frustumList.push_back(frus);
+	generateRandomAABBs(	nAABB-3,
+							1.0f, 5.0f,
+							1.0f, 5.0f,
+							1.0f, 5.0f,
+							-10, 10,
+							0, 0,
+							10, 20,
+							aabbList
+							);
+/*
 	generateRandomPyrFrustums(	nFrustum,
 								45, 90,
 								1, 2,
@@ -95,16 +113,7 @@ int main(int argc, char** argv)
 								-180, 180,
 								0, 0,
 								frustumList );
-	generateRandomAABBs(	nAABB,
-							1.0f, 5.0f,
-							1.0f, 5.0f,
-							1.0f, 5.0f,
-							-100, 100,
-							0, 0,
-							-100, 100,
-							aabbList
-							);
-
+								
 	generateRandomSpheres( nSpheres,
 							0.5f, 2.f,
 							-100, 100,
@@ -120,6 +129,7 @@ int main(int argc, char** argv)
 							-100, 100,
 							sphericalFrustumList
 							);
+							*/
 
 	//gpuCuller
 	float* frustumPlanesData = new float[nFrustum*24];
@@ -206,8 +216,10 @@ int main(int argc, char** argv)
 				if( gculResultsBoxes[nFrustum*i + j] == GCUL_INSIDE || gculResultsBoxes[nFrustum*i + j] == GCUL_SPANNING )
 				{
 	 				aabbList[i].isInsideFrustum = true;
-					//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResults[nFrustum*i +j]);
 				}		
+				else
+					aabbList[i].isInsideFrustum = false;
+				printf("Frustum %d Box %d Resut %d\n ", j, i, gculResultsBoxes[nFrustum*i +j]);
 			}
 			//printf("\r\n");
 		}

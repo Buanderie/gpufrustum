@@ -57,6 +57,11 @@ void GenerateOcclusionRay( dim3 gridSize, dim3 blockSize, float* boxPoints, cons
 	GenerateOcclusionRay<<< gridSize, blockSize >>>( boxPoints, ( float3* )frustumCorners, boxCount, frustumCount, rayCoverageWidth, rayCoverageHeight, classificationResult, rayData ); 
 }
 
+void OcclusionRayIntersect( dim3 gridSize, dim3 blockSize, float* boxPoints, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, float* collisionDistance, int* classificationResult, const occlusionray_t* rayData )
+{
+	OcclusionRayIntersect<<< gridSize, blockSize >>>( (float3*) boxPoints, boxCount, frustumCount, rayCoverageWidth, rayCoverageHeight, collisionDistance, classificationResult, rayData );
+}
+
 /**
 		p0	   p1     ...  pn	
 	v0 [ i00 ][ i10 ] ... [ in0 ]
@@ -561,8 +566,34 @@ GenerateOcclusionRay( const float* boxPoints, const float3* frustumCorners, int 
 
 	float3 dir = ComputeVector( startpoint, endpoint );
 	dir = ScaleVector( dir, 1.0/ComputeVectorNorm( dir ) );
-	rayData[ nbRay * findex + rayCoverageWidth*rayy + rayx ].start.x = startpoint.x;
+	rayData[ nbRay * findex + rayCoverageWidth*rayy + rayx ].start = startpoint;
 	rayData[ 0 ].dir = dir;
+}
+
+__global__ void 
+OcclusionRayIntersect( float3* boxPoints, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, float* collisionDistance, int* classificationResult, const occlusionray_t* rayData )
+{
+	int boxOffset = (blockIdx.y * blockDim.y + threadIdx.y)*8;
+	int rayOffset = (blockIdx.x * blockDim.x + threadIdx.x);
+	int cullingResultOffset = frustumCount * boxOffset + rayOffset / (rayCoverageWidth*rayCoverageHeight);
+	
+	if( boxOffset >= boxCount )
+		return;
+
+	if( classificationResult[ cullingResultOffset ] == GCUL_OUTSIDE )
+		return;
+
+	occlusionray_t ray = rayData[ rayOffset ];
+
+	float3 lowPoint = LowerPoint( boxPoints+boxOffset );
+	float3 upPoint = UpperPoint( boxPoints+boxOffset );
+
+	float tmin = 0;
+	float tmax = 50000;
+	bool hit = RayAABBIntersect( ray.start, ray.dir, lowPoint, upPoint, tmin, tmax);
+
+	int resultOffset = (blockIdx.y * blockDim.y + threadIdx.y)*(frustumCount*rayCoverageWidth*rayCoverageHeight)+rayOffset;
+		collisionDistance[ resultOffset ] = tmin;
 }
 
 __device__ float3
@@ -653,7 +684,7 @@ CountArrayElementValue( const int* array, int elementCount, int elementValue )
 }
 
 __device__ bool
-RayAABBIntersect( float3 raystart, float3 raydir, float3 m1, float3 m2, float tmin, float tmax)
+RayAABBIntersect( float3 raystart, float3 raydir, float3 m1, float3 m2, float& tmin, float& tmax)
 {
    float tymin, tymax, tzmin, tzmax; 
    float flag = 1.0; 
