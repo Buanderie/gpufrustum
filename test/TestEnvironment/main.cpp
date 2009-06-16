@@ -75,33 +75,29 @@ int main(int argc, char** argv)
 		//nFrustum = 124;
 		//nAABB = 357;
 		nFrustum = 1;
-		nSpheres = 10;
-		nAABB = 8;
-		nSphericalFrustums = 10;
+		nSpheres = 1;
+		nAABB = 20;
+		nSphericalFrustums = 1;
 	}
 
 	srand( time( NULL ) );
 	//srand( 10 );
 
-	glAABB a1(glVector4f(-3,-4,9,1), glVector4f(5,4,13,1));
-	glAABB a2(glVector4f(-3,-4,14,1), glVector4f(5,4,18,1));
-	glAABB a3(glVector4f(-3,-4,18,1), glVector4f(5,4,22,1));
+
 	glPyramidalFrustum frus(90.0f, 1.0f, 50.0f, 0.75f, glVector4f(0,0,0,0), 0, 0, 0);
-	aabbList.push_back(a1);
-	aabbList.push_back(a2);
-	aabbList.push_back(a3);
+
 	frustumList.push_back(frus);
-	generateRandomAABBs(	nAABB-3,
-							1.0f, 5.0f,
-							1.0f, 5.0f,
-							1.0f, 5.0f,
-							-10, 10,
+	generateRandomAABBs(	nAABB,
+							1.0f, 7.0f,
+							1.0f, 7.0f,
+							1.0f, 7.0f,
+							-15, 15,
 							0, 0,
-							10, 20,
+							10, 30,
 							aabbList
 							);
-/*
-	generateRandomPyrFrustums(	nFrustum,
+
+	/*generateRandomPyrFrustums(	nFrustum,
 								45, 90,
 								1, 2,
 								5, 50,
@@ -129,7 +125,7 @@ int main(int argc, char** argv)
 							-100, 100,
 							sphericalFrustumList
 							);
-							*/
+				*/			
 
 	//gpuCuller
 	float* frustumPlanesData = new float[nFrustum*24];
@@ -138,7 +134,7 @@ int main(int argc, char** argv)
 	float* spheresData = new float[nSpheres*4];
 	float* sphericalFrustumData = new float[nSphericalFrustums*4];
 	getFrustumPlanesArray( frustumList, frustumPlanesData );
-	getFrustumPlanesArray( frustumList, frustumCornersData );
+	getFrustumCornersArray( frustumList, frustumCornersData );
 	getAABBCornersArray( aabbList, aabbCornersData );
 	getSpheresArray( sphereList, spheresData );
 	getSpheresArray( sphericalFrustumList, sphericalFrustumData );

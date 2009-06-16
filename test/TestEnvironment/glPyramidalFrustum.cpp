@@ -332,7 +332,7 @@ void glPyramidalFrustum::extractCornersData( float* out )
 {
 	for(int i = 0; i < 8; ++i )
 	{
-		for(int j = 0; j < 4; ++j )
-			out[i*4 + j] = p[i][j];
+		for(int j = 0; j < 3; ++j )
+			out[i*3 + j] = p[i][j];
 	}
 }

@@ -39,7 +39,7 @@ void generateRandomSpheres(	int n,
 						   );
 
 void getFrustumPlanesArray( std::vector<glPyramidalFrustum>& list, float* a );
-void getFrustumCornersArray( std::vector<glPyramidalFrustum> list, float* a );
+void getFrustumCornersArray( std::vector<glPyramidalFrustum>& list, float* a );
 void getAABBCornersArray( std::vector<glAABB> list, float* a );
 void getSpheresArray( const std::vector<glSphere>& spheres, float* data );
 

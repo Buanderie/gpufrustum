@@ -556,7 +556,7 @@ GenerateOcclusionRay( const float* boxPoints, const float3* frustumCorners, int 
 	float3 vecFarRight = ScaleVector( ComputeVector( farUpLeft, farUpRight ), xscale );
 	
 	float3 startpoint, endpoint;
-	startpoint = nearUpLeft;
+	
 	startpoint.x = nearUpLeft.x + vecNearDown.x + vecNearRight.x;
 	startpoint.y = nearUpLeft.y + vecNearDown.y + vecNearRight.y;
 	startpoint.z = nearUpLeft.z + vecNearDown.z + vecNearRight.z;
@@ -567,7 +567,7 @@ GenerateOcclusionRay( const float* boxPoints, const float3* frustumCorners, int 
 	float3 dir = ComputeVector( startpoint, endpoint );
 	dir = ScaleVector( dir, 1.0/ComputeVectorNorm( dir ) );
 	rayData[ nbRay * findex + rayCoverageWidth*rayy + rayx ].start = startpoint;
-	rayData[ 0 ].dir = dir;
+	rayData[ nbRay * findex + rayCoverageWidth*rayy + rayx ].dir = dir;
 }
 
 __global__ void 
@@ -575,13 +575,16 @@ OcclusionRayIntersect( float3* boxPoints, int boxCount, int frustumCount, int ra
 {
 	int boxOffset = (blockIdx.y * blockDim.y + threadIdx.y)*8;
 	int rayOffset = (blockIdx.x * blockDim.x + threadIdx.x);
-	int cullingResultOffset = frustumCount * boxOffset + rayOffset / (rayCoverageWidth*rayCoverageHeight);
-	
-	if( boxOffset >= boxCount )
+	int cullingResultOffset = frustumCount * boxOffset/8 + rayOffset / (rayCoverageWidth*rayCoverageHeight);
+	int resultOffset = (blockIdx.y * blockDim.y + threadIdx.y)*(frustumCount*rayCoverageWidth*rayCoverageHeight)+rayOffset;
+
+	if( boxOffset/8 >= boxCount )
 		return;
 
 	if( classificationResult[ cullingResultOffset ] == GCUL_OUTSIDE )
+	{
 		return;
+	}
 
 	occlusionray_t ray = rayData[ rayOffset ];
 
@@ -592,8 +595,13 @@ OcclusionRayIntersect( float3* boxPoints, int boxCount, int frustumCount, int ra
 	float tmax = 50000;
 	bool hit = RayAABBIntersect( ray.start, ray.dir, lowPoint, upPoint, tmin, tmax);
 
-	int resultOffset = (blockIdx.y * blockDim.y + threadIdx.y)*(frustumCount*rayCoverageWidth*rayCoverageHeight)+rayOffset;
+ 	if( hit == false )
+		collisionDistance[ resultOffset ] = -1;
+	else
+	{
 		collisionDistance[ resultOffset ] = tmin;
+		//printf("Collision Ray#%i / Box#%i\n", (blockIdx.x * blockDim.x + threadIdx.x) ,blockIdx.y * blockDim.y + threadIdx.y);
+	}
 }
 
 __device__ float3
@@ -728,5 +736,8 @@ RayAABBIntersect( float3 raystart, float3 raydir, float3 m1, float3 m2, float& t
     if (tzmin > tmin) tmin = tzmin; 
     if (tzmax < tmax) tmax = tzmax; 
       
-    return (flag > 0); 
+    if (flag > 0)
+		return true;
+	else
+		return false;
 }

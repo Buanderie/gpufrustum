@@ -17,7 +17,7 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 	
 	int nbThreadY = 2;
 	gridSize.x = frustumCount;
-	gridSize.y = boxCount / nbThreadY;
+	gridSize.y = ceil((float)boxCount / (float)nbThreadY);
 	blockSize.x = rayCoverageWidth * rayCoverageHeight;
 	blockSize.y = nbThreadY;
 	
@@ -34,14 +34,33 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 
 	//Passe de calcul de minimum...
 	//Pour chaque rayon
+	for( int i = 0; i < boxCount; ++i )
+	{
+		for( int j = 0; j < frustumCount; ++j )
+		{
+
+			if( classificationResultHost[ frustumCount*i + j ] == GCUL_INSIDE ||
+				classificationResultHost[ frustumCount*i + j ] == GCUL_SPANNING )
+			{
+				classificationResultHost[ frustumCount*i + j ] = GCUL_OCCLUDED;
+			}
+		}
+	}
+
 	for( int i = 0; i < frustumCount*rayCoverageWidth*rayCoverageHeight; ++i )
 	{
 		float tmin = 40000000;
-		int boxMin = 0;
+		int boxMin = -1;
+
+		int frustumIndex;
+		frustumIndex = i/(rayCoverageWidth*rayCoverageHeight);
+
 		//Pour chaque boite
 		for( int j = 0; j < boxCount; ++j )
 		{
-			float dist = collisionDistance_h[j*frustumCount*rayCoverageWidth*rayCoverageHeight+i];
+			int collDistIndex = (j*(frustumCount*rayCoverageWidth*rayCoverageHeight))+i;
+			float dist = collisionDistance_h[collDistIndex];
+			printf("DIST=%f\n", dist);
 			if( dist < tmin && dist > 0 )
 			{
 				tmin = dist;
@@ -49,19 +68,10 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 			}
 		}
 
-		int frustumIndex;
-		frustumIndex = i/(rayCoverageWidth*rayCoverageHeight);
-		
-		//classificationResultHost[ resultOffset ] = GCUL_INSIDE;
-		for( int k = 0; k < boxCount; ++k )
+
+		if( boxMin != -1 )
 		{
-			int resultOffset = frustumIndex * boxCount + k;
-			if( classificationResultHost[ frustumCount * k + frustumIndex ] == GCUL_SPANNING ||
-				classificationResultHost[ frustumCount * k + frustumIndex ] == GCUL_INSIDE )
-			{
-				if( k != boxMin )
-					classificationResultHost[ resultOffset ] = GCUL_OCCLUDED;
-			}
+			classificationResultHost[ frustumIndex * boxCount + boxMin ] = GCUL_INSIDE;
 		}
 	}
 	//
