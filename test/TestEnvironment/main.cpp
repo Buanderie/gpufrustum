@@ -31,7 +31,7 @@ GCUL_Classification* gculResultsSphericalFrustumsSpheres;
 int main(int argc, char** argv)
 {
     //Create the main window
-	sf::Window App(sf::VideoMode::GetDesktopMode(), string("gpuCuller Demo"));
+	sf::Window App(sf::VideoMode(800,600,32), string("gpuCuller Demo"));
 
     //Create a clock for measuring time elapsed
     sf::Clock Clock;
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 		//nAABB = 357;
 		nFrustum = 1;
 		nSpheres = 1;
-		nAABB = 20;
+		nAABB = 100;
 		nSphericalFrustums = 1;
 	}
 
@@ -84,16 +84,19 @@ int main(int argc, char** argv)
 	//srand( 10 );
 
 
-	glPyramidalFrustum frus(90.0f, 1.0f, 50.0f, 0.75f, glVector4f(0,0,0,0), 0, 0, 0);
+	glPyramidalFrustum frus(90.0f, 1.0f, 100.0f, 0.75f, glVector4f(0,0,0,0), 0, 0, 0);
+	glPyramidalFrustum frus2(90.0f, 1.0f, 50.0f, 0.75f, glVector4f(0,0,0,0), 0, 180.0f, 0);
 
 	frustumList.push_back(frus);
+	//frustumList.push_back(frus2);
+
 	generateRandomAABBs(	nAABB,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
-							-15, 15,
+							-50, 50,
 							0, 0,
-							10, 30,
+							-50, 50,
 							aabbList
 							);
 

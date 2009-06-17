@@ -15,7 +15,7 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 	blockSize.y = rayCoverageHeight;
 	GenerateOcclusionRay( gridSize, blockSize, boxPoints, frustumCorners, boxCount, frustumCount, rayCoverageWidth, rayCoverageHeight, classificationResult, (occlusionray_t*)rays_d);
 	
-	int nbThreadY = 2;
+	int nbThreadY = floor((float)256/(float)(rayCoverageWidth * rayCoverageHeight));
 	gridSize.x = frustumCount;
 	gridSize.y = ceil((float)boxCount / (float)nbThreadY);
 	blockSize.x = rayCoverageWidth * rayCoverageHeight;
@@ -55,12 +55,15 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 		int frustumIndex;
 		frustumIndex = i/(rayCoverageWidth*rayCoverageHeight);
 
+		if( frustumIndex != 0 )
+			int lol = 67;
+
 		//Pour chaque boite
 		for( int j = 0; j < boxCount; ++j )
 		{
 			int collDistIndex = (j*(frustumCount*rayCoverageWidth*rayCoverageHeight))+i;
 			float dist = collisionDistance_h[collDistIndex];
-			printf("DIST=%f\n", dist);
+			//printf("DIST=%f\n", dist);
 			if( dist < tmin && dist > 0 )
 			{
 				tmin = dist;
@@ -71,7 +74,8 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 
 		if( boxMin != -1 )
 		{
-			classificationResultHost[ frustumIndex * boxCount + boxMin ] = GCUL_INSIDE;
+			//classificationResultHost[ frustumIndex * boxCount + boxMin ] = GCUL_INSIDE;
+			classificationResultHost[ frustumCount * boxMin + frustumIndex ] = GCUL_INSIDE; 
 		}
 	}
 	//

@@ -294,7 +294,7 @@ int ProcessPyramidalFrustumAABBoxCulling( GCUL_Classification* result )
 	//If occlusion cullng is enabled, process it.
 	if( EnableStates[GCUL_OCCLUSION_CULLING] )
 	{
-		int ret = ProcessPyramidalFrustumAABBOcclusionCulling((float*)boundingBoxes, (float*)frustumsCorners, boxCount, frustumCount, 10, 10, (int*)resultDeviceMemory, (int*)result);
+		int ret = ProcessPyramidalFrustumAABBOcclusionCulling((float*)boundingBoxes, (float*)frustumsCorners, boxCount, frustumCount, 15, 15, (int*)resultDeviceMemory, (int*)result);
 	}
 	//
 

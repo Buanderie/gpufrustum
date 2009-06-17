@@ -575,7 +575,9 @@ OcclusionRayIntersect( float3* boxPoints, int boxCount, int frustumCount, int ra
 {
 	int boxOffset = (blockIdx.y * blockDim.y + threadIdx.y)*8;
 	int rayOffset = (blockIdx.x * blockDim.x + threadIdx.x);
-	int cullingResultOffset = frustumCount * boxOffset/8 + rayOffset / (rayCoverageWidth*rayCoverageHeight);
+	
+	int cullingResultOffset = frustumCount * (boxOffset/8) + (rayOffset / (rayCoverageWidth*rayCoverageHeight));
+	
 	int resultOffset = (blockIdx.y * blockDim.y + threadIdx.y)*(frustumCount*rayCoverageWidth*rayCoverageHeight)+rayOffset;
 
 	if( boxOffset/8 >= boxCount )
@@ -736,6 +738,8 @@ RayAABBIntersect( float3 raystart, float3 raydir, float3 m1, float3 m2, float& t
     if (tzmin > tmin) tmin = tzmin; 
     if (tzmax < tmax) tmax = tzmax; 
       
+	tmin = max(tmin, tmax);
+
     if (flag > 0)
 		return true;
 	else
