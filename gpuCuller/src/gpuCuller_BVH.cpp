@@ -166,7 +166,5 @@ void BVHTree::updateThreadLink( BVHNode* n, int index )
 
 bintreenode_t* BVHTree::getThreadedBinaryTree()
 {
-
-	
 	return 0;
 }

@@ -23,9 +23,10 @@ vector<glPyramidalFrustum> frustumList;
 vector<glAABB> aabbList;
 vector<glSphere> sphereList;
 vector<glSphere> sphericalFrustumList;
-GCUL_Classification* gculResultsBoxes;
-GCUL_Classification* gculResultsSpheres;
+GCUL_Classification* gculResultsPyrBoxes;
+GCUL_Classification* gculResultsPyrSpheres;
 GCUL_Classification* gculResultsSphericalFrustumsSpheres;
+GCUL_Classification* gculResultsSphericalFrustumsBoxes;
 ////////////////////////////////////////////////////////////
 
 int main(int argc, char** argv)
@@ -65,49 +66,49 @@ int main(int argc, char** argv)
 	int nAABB;
 	int nSpheres;
 	int nSphericalFrustums;
-	if( argc == 3 )
+	if( argc == 5 )
 	{
 		nFrustum = atoi(argv[1]);
-		nAABB = atoi(argv[2]);
+		nAABB = atoi(argv[3]);
+		nSpheres = atoi(argv[4]);
+		nSphericalFrustums = atoi(argv[2]);
 	}
 	else
 	{
-		//nFrustum = 124;
-		//nAABB = 357;
-		nFrustum = 1;
-		nSpheres = 1;
-		nAABB = 10;
-		nSphericalFrustums = 1;
+		nFrustum = 25;
+		nSpheres = 100;
+		nAABB = 100;
+		nSphericalFrustums = 25;
 	}
 
 	srand( time( NULL ) );
 	//srand( 10 );
 
 
-	glPyramidalFrustum frus(90.0f, 1.0f, 100.0f, 0.75f, glVector4f(0,0,0,0), 0, 0, 0);
-	glPyramidalFrustum frus2(90.0f, 1.0f, 50.0f, 0.75f, glVector4f(0,0,0,0), 0, 180.0f, 0);
+	//glPyramidalFrustum frus(90.0f, 1.0f, 100.0f, 0.75f, glVector4f(0,0,0,0), 0, 0, 0);
+	//glPyramidalFrustum frus2(90.0f, 1.0f, 50.0f, 0.75f, glVector4f(0,0,0,0), 0, 180.0f, 0);
 
-	frustumList.push_back(frus);
+	//frustumList.push_back(frus);
 	//frustumList.push_back(frus2);
 
 	generateRandomAABBs(	nAABB,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
-							-20, 20,
+							-100, 0,
 							0, 0,
-							-20, 20,
+							-100, 100,
 							aabbList
 							);
 
-	/*generateRandomPyrFrustums(	nFrustum,
+	generateRandomPyrFrustums(	nFrustum,
 								45, 90,
 								1, 2,
 								5, 50,
 								3.0f/4.0f, 3.0f/4.0f,
 								-100, 100,
 								0, 0,
-								-100, 100,
+								0, 100,
 								0, 0,
 								-180, 180,
 								0, 0,
@@ -115,17 +116,17 @@ int main(int argc, char** argv)
 								
 	generateRandomSpheres( nSpheres,
 							0.5f, 2.f,
-							-100, 100,
+							0, 100,
 							0, 0,
 							-100, 100,
 							sphereList
 							);
-*/
+
 	generateRandomSpheres( nSphericalFrustums,
 							10.f, 10.f,
-							-1, 1,
+							-100, 100,
 							0, 0,
-							-1, 1,
+							-100, 0,
 							sphericalFrustumList
 							);
 						
@@ -136,6 +137,7 @@ int main(int argc, char** argv)
 	float* aabbCornersData = new float[nAABB*24];
 	float* spheresData = new float[nSpheres*4];
 	float* sphericalFrustumData = new float[nSphericalFrustums*4];
+
 	getFrustumPlanesArray( frustumList, frustumPlanesData );
 	getFrustumCornersArray( frustumList, frustumCornersData );
 	getAABBCornersArray( aabbList, aabbCornersData );
@@ -147,21 +149,18 @@ int main(int argc, char** argv)
 
 	//gculEnable(GCUL_OCCLUSION_CULLING);
 
-	//Initialize data	
-	//Add n frustum
-	//gculPyramidalFrustumCornersPointer( nFrustum, GCUL_FLOAT,frustumCornersData );
-	//gculPyramidalFrustumPlanesPointer( nFrustum, GCUL_FLOAT, frustumPlanesData );
-	//gculSphericalFrustumPointer( nSphericalFrustums, GCUL_FLOAT, sphericalFrustumData );
-	
-	//Add m AABB
-	gculBoxesPointer( nAABB, GCUL_FLOAT, aabbCornersData );
+	//Initialize data
+	gculPyramidalFrustumCornersPointer( nFrustum, GCUL_FLOAT,frustumCornersData );
+	gculPyramidalFrustumPlanesPointer( nFrustum, GCUL_FLOAT, frustumPlanesData );
 	gculSphericalFrustumPointer( nSphericalFrustums, GCUL_FLOAT, sphericalFrustumData );
+	gculBoxesPointer( nAABB, GCUL_FLOAT, aabbCornersData );
+	gculSpheresPointer( nSpheres, GCUL_FLOAT, spheresData );
 
 	//Prepare output
-	gculResultsBoxes	= new GCUL_Classification[nSphericalFrustums * nAABB	 ];
-	//gculResultsSpheres	= new GCUL_Classification[nFrustum * nSpheres];
-	
-	//gculResultsSphericalFrustumsSpheres = new GCUL_Classification[nSphericalFrustums * nSpheres];
+	gculResultsPyrBoxes	= new GCUL_Classification[nFrustum * nAABB	 ];
+	gculResultsPyrSpheres	= new GCUL_Classification[nFrustum * nSpheres];
+	gculResultsSphericalFrustumsSpheres = new GCUL_Classification[nSphericalFrustums * nSpheres];
+	gculResultsSphericalFrustumsBoxes = new GCUL_Classification[nSphericalFrustums * nAABB];
 	//
 
 
@@ -175,57 +174,100 @@ int main(int argc, char** argv)
 		gculEnableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
 		gculEnableArray( GCUL_Array::GCUL_BBOXES_ARRAY );*/
 
+		//Pyr / AABB
 		gculEnableArray( GCUL_BBOXES_ARRAY			 );
-		gculEnableArray( GCUL_SPHERICALFRUSTUM_ARRAY );
+		gculEnableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+		gculEnableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
+		gculProcessFrustumCulling( gculResultsPyrBoxes );
+		gculDisableArray( GCUL_BBOXES_ARRAY			 );
+		gculDisableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+		gculDisableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
+		//
 
-		gculProcessFrustumCulling( gculResultsBoxes );
+		//Pyr / Sphere
+		gculEnableArray( GCUL_Array::GCUL_BSPHERES_ARRAY			 );
+		gculEnableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+		gculEnableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );
+		gculProcessFrustumCulling( gculResultsPyrSpheres );
+		gculDisableArray( GCUL_BSPHERES_ARRAY			 );
+		gculDisableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMCORNERS_ARRAY );
+		gculDisableArray( GCUL_Array::GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY );	
+		//
 
-		float t = Clock.GetElapsedTime();
+		//Sphere / AABB
+		gculEnableArray( GCUL_Array::GCUL_SPHERICALFRUSTUM_ARRAY );
+		gculEnableArray( GCUL_Array::GCUL_BBOXES_ARRAY );
+		gculProcessFrustumCulling( gculResultsSphericalFrustumsBoxes );
+		gculDisableArray( GCUL_Array::GCUL_BBOXES_ARRAY );
+		gculDisableArray( GCUL_Array::GCUL_SPHERICALFRUSTUM_ARRAY );
+		//
+
+		//Sphere / Sphere
+		gculEnableArray( GCUL_Array::GCUL_SPHERICALFRUSTUM_ARRAY );
+		gculEnableArray( GCUL_Array::GCUL_BSPHERES_ARRAY );
+		gculProcessFrustumCulling( gculResultsSphericalFrustumsSpheres );
+		gculDisableArray( GCUL_Array::GCUL_BSPHERES_ARRAY );
+		gculDisableArray( GCUL_Array::GCUL_SPHERICALFRUSTUM_ARRAY );		
+		//
+
+
+		/*float t = Clock.GetElapsedTime();
 		float cullingpersecond = ( nSphericalFrustums * nAABB )/ t;
 
 		printf("delta_t = %f ms | %fM culling operations per second\n", t * 1000.0f, cullingpersecond / 1000000.0f );
- 
+		*/
+
+		//Results Pyr / AABB
 		for( int i = 0; i < nAABB; ++i )
 		{
-			for(int j = 0; j < nSphericalFrustums; ++j)
+			for(int j = 0; j < nFrustum; ++j)
 			{
-				printf("Frustum %d Box %d Resut %d\n ", j, i, gculResultsBoxes[nFrustum*i +j]);
-				if( gculResultsBoxes[nSphericalFrustums*i + j] == GCUL_INSIDE || gculResultsBoxes[nSphericalFrustums*i + j] == GCUL_SPANNING )
+				//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResultsSphericalFrustumsBoxes[nFrustum*i +j]);
+				if( gculResultsPyrBoxes[nFrustum*i + j] == GCUL_INSIDE || gculResultsPyrBoxes[nFrustum*i + j] == GCUL_SPANNING )
 				{
 					aabbList[i].isInsideFrustum = true; //SetInsideFrustum( true );
 				}
 			}
 		}
+
+		//Results Sphere / AABB
+		for( int i = 0; i < nAABB; ++i )
+		{
+			for(int j = 0; j < nSphericalFrustums; ++j)
+			{
+				//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResultsSphericalFrustumsBoxes[nFrustum*i +j]);
+				if( gculResultsSphericalFrustumsBoxes[nSphericalFrustums*i + j] == GCUL_INSIDE || gculResultsSphericalFrustumsBoxes[nSphericalFrustums*i + j] == GCUL_SPANNING )
+				{
+					aabbList[i].isInsideFrustum = true; //SetInsideFrustum( true );
+				}
+			}
+		}
+
+		//Results Pyr / Sphere
+		for( int i = 0; i < nSpheres; ++i )
+		{
+			for(int j = 0; j < nFrustum; ++j)
+			{
+				//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResultsSphericalFrustumsBoxes[nFrustum*i +j]);
+				if( gculResultsPyrSpheres[nFrustum*i + j] == GCUL_INSIDE || gculResultsPyrSpheres[nFrustum*i + j] == GCUL_SPANNING )
+				{
+					sphereList[i].SetInsideFrustum( true );
+				}
+			}
+		}
 		
-
-
-		//for(int i = 0; i < nSpheres; ++i)
-		//{
-		//	for(int j = 0; j < nFrustum; ++j)
-		//	{
-		//		//std::cout << gculResults[nFrustum*i + j] << std::endl;
-		//		if( gculResultsSpheres[nFrustum*i + j] == GCUL_INSIDE || gculResultsSpheres[nFrustum*i + j] == GCUL_SPANNING )
-		//		{
-		//			sphereList[i].SetInsideFrustum( true );
-		//			//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResults[nFrustum*i +j]);
-		//		}
-		//	}
-		//}
-
-		//for(int i = 0; i < nAABB; ++i)
-		//{
-		//	for(int j = 0; j < nFrustum; ++j)
-		//	{
-		//		if( gculResultsBoxes[nFrustum*i + j] == GCUL_INSIDE || gculResultsBoxes[nFrustum*i + j] == GCUL_SPANNING )
-		//		{
-	 //				aabbList[i].isInsideFrustum = true;
-		//		}		
-		//		else
-		//			aabbList[i].isInsideFrustum = false;
-		//		printf("Frustum %d Box %d Resut %d\n ", j, i, gculResultsBoxes[nFrustum*i +j]);
-		//	}
-		//	//printf("\r\n");
-		//}
+		//Results Sphere / Sphere
+		for( int i = 0; i < nSpheres; ++i )
+		{
+			for(int j = 0; j < nSphericalFrustums; ++j)
+			{
+				//printf("Frustum %d Box %d Resut %d\n ", j, i, gculResultsSphericalFrustumsBoxes[nFrustum*i +j]);
+				if( gculResultsSphericalFrustumsSpheres[nSphericalFrustums*i + j] == GCUL_INSIDE || gculResultsSphericalFrustumsSpheres[nSphericalFrustums*i + j] == GCUL_SPANNING )
+				{
+					sphereList[i].SetInsideFrustum( true );
+				}
+			}
+		}
 		
 
 
@@ -285,19 +327,18 @@ int main(int argc, char** argv)
 		drawFloorGrid( );
 
 		//display the frustums
-		/*for(int i = 0; i < frustumList.size(); ++i )
-			frustumList[i].draw();*/
+		for(int i = 0; i < frustumList.size(); ++i )
+			frustumList[i].draw();
 
-		//Display an AABB
 		for(int i = 0; i < aabbList.size(); ++i )
 			aabbList[i].draw();
 
-		/*for(  int i = 0; i < sphereList.size(); ++i )
+		for(  int i = 0; i < sphereList.size(); ++i )
 		{
 			sphereList[ i ].Draw();
 		}
 
-		*/
+		
 		for( int i = 0; i < sphericalFrustumList.size(); ++i )
 		{
 			sphericalFrustumList[ i ].SetFrustum( true );
@@ -314,11 +355,10 @@ int main(int argc, char** argv)
 	delete[] frustumPlanesData;
 	delete[] frustumCornersData;
 	delete[] aabbCornersData;
-	delete[] gculResultsSpheres;
-	delete[] gculResultsBoxes;
+	delete[] gculResultsPyrSpheres;
+	delete[] gculResultsPyrBoxes;
 	
 	delete cam;
 
     return EXIT_SUCCESS;
  }
-
