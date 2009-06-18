@@ -38,7 +38,6 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 	{
 		for( int j = 0; j < frustumCount; ++j )
 		{
-
 			if( classificationResultHost[ frustumCount*i + j ] == GCUL_INSIDE ||
 				classificationResultHost[ frustumCount*i + j ] == GCUL_SPANNING )
 			{
@@ -63,7 +62,7 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 		{
 			int collDistIndex = (j*(frustumCount*rayCoverageWidth*rayCoverageHeight))+i;
 			float dist = collisionDistance_h[collDistIndex];
-			//printf("DIST=%f\n", dist);
+
 			if( dist < tmin && dist > 0 )
 			{
 				tmin = dist;
@@ -74,6 +73,7 @@ int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustum
 
 		if( boxMin != -1 )
 		{
+			//printf("Inclusion - F#%d B#%d\n", frustumIndex, boxMin );
 			//classificationResultHost[ frustumIndex * boxCount + boxMin ] = GCUL_INSIDE;
 			classificationResultHost[ frustumCount * boxMin + frustumIndex ] = GCUL_INSIDE; 
 		}
