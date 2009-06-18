@@ -213,6 +213,12 @@ void __stdcall gculSpheresPointer( GCULuint size, GCULenum type, const GCULvoid*
 GPUCULLER_API
 GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result );
 
+/**
+	
+*/
+GPUCULLER_API
+GCULint __stdcall gculMemoryUsed( GCUL_Array frustums, GCUL_Array boundingVolumes, GCULuint frustumCount, GCULuint volumeCount );
+
 #ifdef __cplusplus
 }
 #endif  // __cplusplus

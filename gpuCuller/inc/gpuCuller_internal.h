@@ -19,7 +19,7 @@
 #endif
 
 #ifdef _DEBUG
-	#define cuda_call( cudafunc ) cudaError_t err = cudafunc; assert( err == cudaSuccess, cudaGetErrorString( err ) );
+	#define cuda_call( cudafunc ) cudaError_t err = cudafunc; assert( err == cudaSuccess, cudaGetErrorString( err ) )
 #else
 	#define cuda_call( cudafunc ) cudafunc
 #endif

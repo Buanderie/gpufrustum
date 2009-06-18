@@ -55,6 +55,11 @@ bool __stdcall gculIsEnableArray( GCUL_Array array )
 	return false;
 }
 
+GCULint __stdcall gculMemoryUsed( GCUL_Array frustums, GCUL_Array boundingVolumes, GCULuint frustumCount, GCULuint volumeCount )
+{
+	return 0;
+}
+
 FrustumType CurrentFrustumType( void )
 {
 	if( ArrayStates[ GCUL_PYRAMIDALFRUSTUMPLANES_ARRAY ] )
@@ -95,7 +100,7 @@ void AllocArrayDeviceMemory( GCULvoid** pointer, const ArrayInfo& info )
 {
 	int size = info.size * info.elementWidth * SizeInBytes( info.type );
 	
-	cuda_call( cudaMalloc((void**)pointer, size) );
+	cuda_call( cudaMalloc( ( void** )pointer, size ) );
 }
 
 void CopyArrayToDeviceMemory( GCULvoid* array, const ArrayInfo& info )

@@ -14,8 +14,18 @@ namespace Bench
 
 		PyrFrustumGenerator( float worldDimX, float worldDimY );
 
-	protected:
+		void SetVolumeDistances( float depth, float height, float width );
 
-		glVector GetRandomRotations( );
+		void Generate( unsigned int count, float* data );
+
+	private:
+
+		glVector PyrFrustumGenerator::GetRandomRotations( );
+
+	private:
+
+		float m_Depth;
+		float m_Height;
+		float m_Width;
 	};
 }

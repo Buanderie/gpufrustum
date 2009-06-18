@@ -173,10 +173,6 @@
 				UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 				>
 				<File
-					RelativePath=".\AABoxConstGenerator.h"
-					>
-				</File>
-				<File
 					RelativePath=".\AABoxGenerator.h"
 					>
 				</File>
@@ -185,11 +181,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\PyrFrustumConstGenerator.h"
+					RelativePath=".\PyrFrustumGenerator.h"
 					>
 				</File>
 				<File
-					RelativePath=".\PyrFrustumGenerator.h"
+					RelativePath=".\SphereGenerator.h"
 					>
 				</File>
 			</Filter>
@@ -198,10 +194,6 @@
 				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 				>
-				<File
-					RelativePath=".\AABoxConstGenerator.cpp"
-					>
-				</File>
 				<File
 					RelativePath=".\AABoxGenerator.cpp"
 					>
@@ -215,15 +207,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\PyrFrustumConstGenerator.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\PyrFrustumGenerator.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\Save.txt"
+					>
+				</File>
+				<File
+					RelativePath=".\SphereGenerator.cpp"
 					>
 				</File>
 			</Filter>

@@ -383,9 +383,6 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result )
 	FreeDeviceMemory( frustumsPlanes  );
 	FreeDeviceMemory( boundingSpheres );
 
-	char* dest = new char[ frustumPlanesInfo.size * 6 * sphereCount ];
-	cudaMemcpy( dest, spherePlaneIntersection, frustumPlanesInfo.size * 6 * sphereCount * sizeof( char ), cudaMemcpyDeviceToHost );
-
 	//--------------------
 
 	//--------------------
