@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <gpuCuller_kernel.h>
 #include <cutil_inline.h>
+#include <iostream>
+#include <cfloat>
 
 void ClassifyPlanesPoints( dim3 gridSize, dim3 blockSize, const void* iplanes, const void* ipoints, int nPlane, int nPoint, char* out )
 {
@@ -48,6 +50,13 @@ void ClassifySphericalFrustumSpheres( dim3 gridSize, dim3 blockSize, const float
 	size_t sizeOfSharedMemory = ( blockSize.x * 4 + blockSize.y * 4 ) * sizeof( float );
 
 	ClassifySphericalFrustumSpheres<<< gridSize, blockSize, sizeOfSharedMemory >>>( ( float4* )sphericalFrustums, ( float4* )spheres, frustumCount, sphereCount, out );
+
+	check_cuda_error();
+}
+
+void ClassifySphericalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* boxPoints, const float* sphericalFrustums, int boxCount, int frustumCount, int* out )
+{
+	ClassifySphericalFrustumBoxes<<< gridSize, blockSize >>>( ( float3* )boxPoints, ( float4* )sphericalFrustums, boxCount, frustumCount, out );
 
 	check_cuda_error();
 }
@@ -530,6 +539,103 @@ ClassifySphericalFrustumSpheres( const float4* sphericalFrustums, const float4* 
 }
 
 __global__ void
+ClassifySphericalFrustumBoxes( const float3* boxPoints, const float4* sphericalFrustums, int boxCount, int frustumCount, int* out )
+{
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	// Exit if out of bounds.
+	if( x >= frustumCount || y >= boxCount )
+	{
+		return;
+	}
+
+	float3 abbox[ 8 ];
+
+	// Load the box
+	int id = y * 8;
+	for( int i = 0; i < 8; ++i )
+	{
+		abbox[ i ] = boxPoints[ id + i ];
+	}
+
+	float3 upperPoint = UpperPoint( abbox );
+	float3 lowerPoint = LowerPoint( abbox );
+
+	float4 frustum = sphericalFrustums[ x ];
+
+	float d = 0.f;
+	float s = 0.f;
+
+	s  = ComputeBoundedDistance( frustum.x, lowerPoint.x, upperPoint.x );
+	d += s * s;
+	s  = ComputeBoundedDistance( frustum.y, lowerPoint.y, upperPoint.y );
+	d += s * s;
+	s  = ComputeBoundedDistance( frustum.z, lowerPoint.z, upperPoint.z );
+	d += s * s;
+
+	float squaredRadius = frustum.w * frustum.w;
+
+	int outIndex = frustumCount * y + x;
+	if (d > squaredRadius)
+	{
+		out[ outIndex ] = GCUL_OUTSIDE;
+	}
+	else
+	{
+		if( d == 0.f && ( 2.f * frustum.w ) <= Min( upperPoint.x - lowerPoint.x, upperPoint.y - lowerPoint.y, upperPoint.z - lowerPoint.z ) )
+		{
+			out[ outIndex ] = GCUL_ENCLOSING;
+		}
+		else
+		{
+			if( DistanceSquared( frustum, abbox[ 0 ] ) <= squaredRadius &&
+				DistanceSquared( frustum, abbox[ 1 ] ) <= squaredRadius &&
+				DistanceSquared( frustum, abbox[ 2 ] ) <= squaredRadius &&
+				DistanceSquared( frustum, abbox[ 3 ] ) <= squaredRadius &&
+				DistanceSquared( frustum, abbox[ 4 ] ) <= squaredRadius &&
+				DistanceSquared( frustum, abbox[ 5 ] ) <= squaredRadius &&
+				DistanceSquared( frustum, abbox[ 6 ] ) <= squaredRadius &&
+				DistanceSquared( frustum, abbox[ 7 ] ) <= squaredRadius
+				)
+			{
+				out[ outIndex ] = GCUL_INSIDE;
+			}
+			else
+			{
+				out[ outIndex ] = GCUL_SPANNING;
+			}
+		}
+	}
+}
+
+__device__ float 
+Min( float a, float b, float c )
+{
+	if( a < b && a < c ) { return a; }
+	if( b < a && b < c ) { return b; }
+	return c;
+}
+
+__device__ float 
+Max( float a, float b, float c )
+{
+	if( a > b && a > c ) { return a; }
+	if( b > a && b > c ) { return b; }
+	return c;
+}
+
+__device__ float 
+DistanceSquared( float4 p0, float3 p1 )
+{
+	float x = p0.x - p1.x;
+	float y = p0.y - p1.y;
+	float z = p0.z - p1.z;
+
+	return x * x + y * y + z * z; 
+}
+
+__global__ void
 GenerateOcclusionRay( const float* boxPoints, const float3* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, const int* classificationResult, occlusionray_t* rayData )
 {
 	int findex = blockIdx.x;
@@ -648,7 +754,7 @@ UpperPoint( const float3* box )
 {
 	float maxX, maxY, maxZ;
 
-	maxX = maxY = maxZ = -1.175494351e-38; // min float (4bytes)
+	maxX = maxY = maxZ = -FLT_MAX; // 1.175494351e-38; // min float (4bytes)
 
 	for( int i = 0; i < 8; ++i )
 	{
@@ -666,7 +772,7 @@ LowerPoint( const float3* box )
 {
 	float minX, minY, minZ;
 
-	minX = minY = minZ = 3.402823466e+38; // max float (4bytes)
+	minX = minY = minZ = FLT_MAX; // 3.402823466e+38; // max float (4bytes)
 
 	for( int i = 0; i < 8; ++i )
 	{
@@ -691,6 +797,13 @@ CountArrayElementValue( const int* array, int elementCount, int elementValue )
 		}
 	}
 	return count;
+}
+
+__device__ float
+ComputeBoundedDistance( float point, float min, float max ) {
+    if ( point < min ) return min - point;
+    if ( point > max ) return point - max;
+    return 0.f; 
 }
 
 __device__ bool

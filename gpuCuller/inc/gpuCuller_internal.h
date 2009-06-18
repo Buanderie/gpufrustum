@@ -85,6 +85,8 @@ int ProcessPyramidalFrustumSphereCulling( GCUL_Classification* result );
 
 int ProcessSphericalFrustumSphereCulling( GCUL_Classification* result );
 
+int ProcessSphericalFrustumAABoxCulling( GCUL_Classification* result );
+
 int ProcessPyramidalFrustumAABBOcclusionCulling(float* boxPoints, float* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, int* classificationResult, int* classificationResultHost);
 
 void ComputeGridSizes( int threadWidth, int threadHeight, int desiredThreadPerBlock, unsigned int& gridDimX, unsigned int& gridDimY, unsigned int& blockDimX, unsigned int& blockDimY );

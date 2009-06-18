@@ -140,6 +140,10 @@ GCULint __stdcall gculProcessFrustumCulling( GCUL_Classification* result )
 	{
 		return ProcessSphericalFrustumSphereCulling( result );
 	}
+	else if( currentFrustumType == FRUSTUMTYPE_SPHERICAL && currentBoundingVolumeType == BOUNDINGVOLUMETYPE_BOX )
+	{
+		return ProcessSphericalFrustumAABoxCulling( result );
+	}
 	else
 	{
 		assert( false, "Not implemented yet." );
@@ -496,6 +500,79 @@ int ProcessSphericalFrustumSphereCulling( GCUL_Classification* result )
 
 	// Copy the result from device memory.
 	cutilSafeCall( cudaMemcpy( result, resultDeviceMemory, frustumCount * sphereCount * sizeof(int), cudaMemcpyDeviceToHost ) );
+
+	FreeDeviceMemory( resultDeviceMemory );
+
+	return 0;
+}
+
+int ProcessSphericalFrustumAABoxCulling( GCUL_Classification* result )
+{
+	// Allocate spherical frustums on device memory.
+	const ArrayInfo&	frustumInfo	= ArrayInfos[ GCUL_SPHERICALFRUSTUM_ARRAY ];
+	GCULvoid*			frustums	= NULL;
+
+	AllocArrayDeviceMemory( &frustums, frustumInfo );
+
+	if( frustums == NULL )
+	{
+		assert( false, "Can not allocate device memory for spherical frustum." );
+		return -1;
+	}
+
+	// Allocate bounding volumes on device memory.
+	const ArrayInfo&	boundingBoxesInfo	= ArrayInfos[ GCUL_BBOXES_ARRAY ];
+	GCULvoid*			boundingBoxes		= NULL;
+
+	AllocArrayDeviceMemory( &boundingBoxes, boundingBoxesInfo );
+
+	if( boundingBoxes == NULL )
+	{
+		assert( false, "Can not allocate device memory for bounding volumes." );
+		return -1;
+	}
+
+	// Initialize input data on device memory.
+	CopyArrayToDeviceMemory( frustums,			frustumInfo			);
+	CopyArrayToDeviceMemory( boundingBoxes,		boundingBoxesInfo	);
+
+	// Allocate the result matrix on device memory.
+	GCULvoid* resultDeviceMemory = NULL;	
+	AllocResultDeviceMemory( &resultDeviceMemory, frustumInfo, boundingBoxesInfo );
+
+	dim3 dimBlock1stPass;
+	dim3 dimGrid1stPass;
+
+	int frustumCount = frustumInfo.size;
+	int boxCount	 = boundingBoxesInfo.size;
+
+	ComputeGridSizes( 
+		frustumCount, 
+		boxCount, 
+		ClassifySphericalFrustumSpheresEnv.desiredThreadPerBlock,
+		dimGrid1stPass.x, 
+		dimGrid1stPass.y, 
+		dimBlock1stPass.x, 
+		dimBlock1stPass.y 
+		);
+
+	// Process first pass : intersect each plane with each box point.
+	ClassifySphericalFrustumBoxes( 
+		dimGrid1stPass,
+		dimBlock1stPass,
+		( float* )boundingBoxes,
+		( float* )frustums, 
+		boxCount, 
+		frustumCount, 
+		( int* )resultDeviceMemory 
+		);
+
+	// Free device input memory.
+	FreeDeviceMemory( frustums		);
+	FreeDeviceMemory( boundingBoxes );
+
+	// Copy the result from device memory.
+	cutilSafeCall( cudaMemcpy( result, resultDeviceMemory, frustumCount * boxCount * sizeof(int), cudaMemcpyDeviceToHost ) );
 
 	FreeDeviceMemory( resultDeviceMemory );
 

@@ -34,6 +34,8 @@ void ClassifyPyramidalFrustumSpheres( dim3 gridSize, dim3 blockSize, const char*
 
 void ClassifySphericalFrustumSpheres( dim3 gridSize, dim3 blockSize, const float* sphericalFrustums, const float* spheres, int frustumCount, int sphereCount, int* out );
 
+void ClassifySphericalFrustumBoxes( dim3 gridSize, dim3 blockSize, const float* boxPoints, const float* sphericalFrustums, int boxCount, int frustumCount, int* out );
+
 void GenerateOcclusionRay( dim3 gridSize, dim3 blockSize, float* boxPoints, const float* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, const int* classificationResult, occlusionray_t* rayData );
 
 void OcclusionRayIntersect( dim3 gridSize, dim3 blockSize, float* boxPoints, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, float* collisionDistance, int* classificationResult, const occlusionray_t* rayData );
@@ -60,6 +62,9 @@ __global__ void
 ClassifySphericalFrustumSpheres( const float4* sphericalFrustums, const float4* spheres, int frustumCount, int sphereCount, int* out );
 
 __global__ void
+ClassifySphericalFrustumBoxes( const float3* boxPoints, const float4* sphericalFrustums, int boxCount, int frustumCount, int* out );
+
+__global__ void
 GenerateOcclusionRay( const float* boxPoints, const float3* frustumCorners, int boxCount, int frustumCount, int rayCoverageWidth, int rayCoverageHeight, const int* classificationResult, occlusionray_t* rayData );
 
 __global__ void 
@@ -80,8 +85,21 @@ UpperPoint( const float3* box );
 __device__ float3
 LowerPoint( const float3* box );
 
+__device__ float 
+Min( float a, float b, float c );
+
+__device__ float 
+Max( float a, float b, float c );
+
 __device__ float3
 ScaleVector( float3 vec, float scale );
+
+__device__ float 
+DistanceSquared( float4 p0, float3 p1 );
+
+__device__ float
+ComputeBoundedDistance( float point, float min, float max );
+
 
 __device__ float3
 ComputeVector( float3 pointA, float3 pointB );
