@@ -32,7 +32,7 @@ GCUL_Classification* gculResultsSphericalFrustumsBoxes;
 int main(int argc, char** argv)
 {
     //Create the main window
-	sf::Window App(sf::VideoMode(800,600,32), string("gpuCuller Demo"));
+	sf::Window App(sf::VideoMode::GetDesktopMode(), string("gpuCuller Demo"));
 
     //Create a clock for measuring time elapsed
     sf::Clock Clock;
