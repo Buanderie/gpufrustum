@@ -1,1 +1,0 @@
-http://www.flipcode.com/archives/Frustum_Culling.shtml
