@@ -27,6 +27,12 @@ void __stdcall gculReleaseAABB();
 GPUCULLER_API
 void __stdcall gculBuildLBVH();
 
+GPUCULLER_API
+void __stdcall gculSetBVHDepth( unsigned int depth );
+
+GPUCULLER_API
+void __stdcall gculSetUniverseAABB( float min_x, float min_y, float min_z, float max_x, float max_y, float max_z );
+
 #endif
 
 #ifdef __cplusplus

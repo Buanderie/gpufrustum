@@ -5,4 +5,7 @@
 //-------- Data References --------
 thrust::device_ptr<aabb_t> d_AABB;
 thrust::device_ptr<bvhnode_t> d_BVHNODE;
+unsigned int universeElementCount;
+unsigned int bvhDepth;
+aabb_t universeAABB;
 //---------------------------------

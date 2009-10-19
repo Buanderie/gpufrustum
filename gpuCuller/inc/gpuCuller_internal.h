@@ -22,10 +22,13 @@ typedef struct bvhnode{
 //-------- Data References --------
 extern thrust::device_ptr<aabb_t> d_AABB;
 extern thrust::device_ptr<bvhnode_t> d_BVHNODE;
+extern unsigned int universeElementCount;
+extern unsigned int bvhDepth;
+extern aabb_t universeAABB;
 //---------------------------------
 
 //-------- LBVH Code --------------
-void LBVH_assign_morton_code( aabb_t* aabbPtr, bvhnode_t* bvhPtr, unsigned int elementCount );
+void LBVH_assign_morton_code();
 //---------------------------------
 
 #endif

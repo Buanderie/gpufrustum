@@ -30,10 +30,35 @@ void __stdcall gculLoadAABB( unsigned int N, const void* ptr )
 	bvhnode_t * bvhnode_raw_ptr; 
 	cudaMalloc((void **) &bvhnode_raw_ptr, N * sizeof(bvhnode_t));
 	d_BVHNODE = thrust::device_ptr<bvhnode_t>(bvhnode_raw_ptr);
+
+	//Store number of elements
+	universeElementCount = N;
 }
+
+void __stdcall gculSetBVHDepth( unsigned int depth )
+{
+	bvhDepth = depth;
+}
+
+void __stdcall gculSetUniverseAABB( float min_x, float min_y, float min_z, float max_x, float max_y, float max_z )
+{
+	universeAABB.min_x = min_x;
+	universeAABB.min_y = min_y;
+	universeAABB.min_z = min_z;
+	universeAABB.max_x = max_x;
+	universeAABB.max_y = max_y;
+	universeAABB.max_z = max_z;
+}
+
 
 void __stdcall gculBuildLBVH()
 {
 	//First step: Assign Morton Codes to BVH Nodes
+	//int * raw_ptr = thrust::raw_pointer_cast(dev_ptr);
+	aabb_t*		aabb_raw	= thrust::raw_pointer_cast(d_AABB);
+	bvhnode_t*	bvhnode_raw	= thrust::raw_pointer_cast(d_BVHNODE);
+	//
+	LBVH_assign_morton_code();
+	//
 
 }
