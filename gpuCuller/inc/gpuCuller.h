@@ -18,6 +18,15 @@ extern "C" {
 GPUCULLER_API
 void __stdcall gculInitialize( int argc, char** argv );
 
+GPUCULLER_API
+void __stdcall gculLoadAABB( unsigned int size, const void* ptr );
+
+GPUCULLER_API
+void __stdcall gculReleaseAABB();
+
+GPUCULLER_API
+void __stdcall gculBuildLBVH();
+
 #endif
 
 #ifdef __cplusplus

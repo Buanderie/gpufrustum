@@ -2,9 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="gpuCuller"
-	ProjectGUID="{33A83480-29B3-4C7D-B0B5-30973CB399F7}"
-	RootNamespace="gpuCuller"
+	Name="LibTest"
+	ProjectGUID="{F1EA9BE9-8D00-4864-875A-A70A5CEB8AF2}"
+	RootNamespace="LibTest"
+	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -13,28 +14,20 @@
 		/>
 	</Platforms>
 	<ToolFiles>
-		<ToolFile
-			RelativePath="E:\cudasdk\C\common\Cuda.Rules"
-		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\lib\$(ConfigurationName)"
-			IntermediateDirectory=".\obj\$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="2"
+			OutputDirectory="$(SolutionDir)\test\LibTest\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="1"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
-				Include="$(NVSDKCUDA_ROOT)\common\inc;.\inc;.\ext\thrust"
-				Arch="13"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -47,17 +40,15 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/DEBUG"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);./inc"
-				PreprocessorDefinitions="WIN32;_WINDOWS;DLL"
+				AdditionalIncludeDirectories="..\..\gpuCuller\inc"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
-				ExceptionHandling="1"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -70,11 +61,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cuda.lib cudart.lib cutil32.lib"
-				OutputFile=".\lib\$(ConfigurationName)\$(ProjectName)-d.dll"
+				AdditionalDependencies="gpuCuller-d.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(NVSDKCUDA_ROOT)\common\lib"
+				AdditionalLibraryDirectories="..\..\gpuCuller\lib\Debug"
 				GenerateDebugInformation="true"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -97,14 +88,15 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy ..\..\gpuCuller\lib\Debug\gpuCuller-d.dll .\Debug\gpuCuller-d.dll&#x0D;&#x0A;copy $(NVSDKCUDA_ROOT)\common\lib\cutil32.dll .\Debug\cutil32.dll"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="2"
+			ConfigurationType="1"
+			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -112,9 +104,6 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="CUDA Build Rule"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -129,10 +118,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);../../../cutil/inc;../../src;../../inc"
-				PreprocessorDefinitions="WIN32;_WINDOWS;DLL"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -147,12 +136,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cuda.lib cudart.lib cutil32.lib"
-				OutputFile="../../lib/$(ProjectName).dll"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);../../../cutil/lib"
-				IgnoreAllDefaultLibraries="false"
+				LinkIncremental="1"
 				GenerateDebugInformation="true"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -184,39 +170,25 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Headers"
+			Name="Source Files"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\inc\gpuCuller.h"
-				>
-			</File>
-			<File
-				RelativePath=".\inc\gpuCuller_internal.h"
+				RelativePath=".\LibTest.cpp"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Sources"
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\src\gpuCuller_Common.cu"
-				>
-			</File>
-			<File
-				RelativePath=".\src\gpuCuller_Data.cu"
-				>
-			</File>
-			<File
-				RelativePath=".\src\gpuCuller_LBVH.cu"
-				>
-			</File>
-			<File
-				RelativePath=".\src\gpuCuller_Util.cu"
-				>
-			</File>
 		</Filter>
 		<Filter
-			Name="Kernels"
+			Name="Resource Files"
+			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
+			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
 	</Files>
