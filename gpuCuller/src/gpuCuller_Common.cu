@@ -3,12 +3,19 @@
 #include <gpuCuller.h>
 #include <gpuCuller_internal.h>
 #include <thrust/device_vector.h>
+#include <thrust/version.h>
 #include <iostream>
 
 using namespace std;
 
 void __stdcall gculInitialize( int argc, char** argv )
 {
+	int major = THRUST_MAJOR_VERSION;
+    int minor = THRUST_MINOR_VERSION;
+    int subminor = THRUST_SUBMINOR_VERSION;
+	cout << "Initializing gpuCuller..." << endl;
+	std::cout << "Using Thrust v" << major << "." << minor << "." << subminor << std::endl;
+
 	printf("Initializing CUDA...\n");
 	// Initializes CUDA device
 	if( cutCheckCmdLineFlag(argc, (const char**)argv, "device") )
@@ -54,11 +61,15 @@ void __stdcall gculSetUniverseAABB( float min_x, float min_y, float min_z, float
 void __stdcall gculBuildLBVH()
 {
 	//First step: Assign Morton Codes to BVH Nodes
-	//int * raw_ptr = thrust::raw_pointer_cast(dev_ptr);
-	aabb_t*		aabb_raw	= thrust::raw_pointer_cast(d_AABB);
-	bvhnode_t*	bvhnode_raw	= thrust::raw_pointer_cast(d_BVHNODE);
-	//
 	LBVH_assign_morton_code();
 	//
 
+
+	//Second step: Sort the BVH Nodes according to their morton codes...
+	//Use the thrust::sort function...
+	//
+	LBVH_sort_by_code();
+
+	
+	//LBVH_CheckNodeData();
 }

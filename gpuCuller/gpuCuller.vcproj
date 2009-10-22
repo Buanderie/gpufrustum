@@ -34,6 +34,7 @@
 			<Tool
 				Name="CUDA Build Rule"
 				Include="$(NVSDKCUDA_ROOT)\common\inc;.\inc;.\ext\thrust;.\kernel"
+				Debug="true"
 				Arch="13"
 				Emulation="false"
 			/>

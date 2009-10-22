@@ -29,6 +29,8 @@ extern aabb_t universeAABB;
 
 //-------- LBVH Code --------------
 void LBVH_assign_morton_code();
+void LBVH_sort_by_code();
+void LBVH_CheckNodeData();
 //---------------------------------
 
 #endif
