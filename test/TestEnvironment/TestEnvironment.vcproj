@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\Glut;..\..\gpuCuller\inc;&quot;.\ext\SFML-1.4\include&quot;"
+				AdditionalIncludeDirectories="..\ext\Glut;..\..\gpuCuller\inc;&quot;..\ext\SFML-1.4\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="gpuCuller-d.lib opengl32.lib glu32.lib glut32.lib sfml-system.lib sfml-window.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;./ext/SFML-1.4/lib/vc2008&quot;;..\Glut;../../gpuCuller/lib"
+				AdditionalLibraryDirectories="&quot;../ext/SFML-1.4/lib/vc2008&quot;;..\ext\Glut;..\..\gpuCuller\lib\Debug"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -88,7 +88,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy ..\..\cutil\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy .\ext\SFML-1.4\lib\vc2008\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\Glut\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;"
+				CommandLine="copy ..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\ext\SFML-1.4\lib\vc2008\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\ext\Glut\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\gpuCuller\lib\Debug\gpuCuller-d.dll .\Debug\gpuCuller-d.dll&#x0D;&#x0A;copy $(NVSDKCUDA_ROOT)\common\lib\cutil32.dll .\Debug\cutil32.dll&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration

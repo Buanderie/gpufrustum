@@ -5,7 +5,7 @@
 
 class glAABB
 {
-private:
+public:
 	glVector4f m_MinPos;
 	glVector4f m_MaxPos;
 
@@ -13,6 +13,7 @@ public:
 	glAABB(glVector4f minPos, glVector4f maxPos);
 	glAABB(const glAABB& val);
 	void draw();
+	void drawColor(float r, float g, float b);
 	void extractCornersData( float* out );
 	bool isInsideFrustum;
 };

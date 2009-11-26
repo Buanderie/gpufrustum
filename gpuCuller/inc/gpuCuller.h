@@ -33,6 +33,12 @@ void __stdcall gculSetBVHDepth( unsigned int depth );
 GPUCULLER_API
 void __stdcall gculSetUniverseAABB( float min_x, float min_y, float min_z, float max_x, float max_y, float max_z );
 
+GPUCULLER_API
+unsigned int __stdcall gculGetHierarchySize();
+
+GPUCULLER_API
+void __stdcall gculGetHierarchyInformation( void* data );
+
 #endif
 
 #ifdef __cplusplus

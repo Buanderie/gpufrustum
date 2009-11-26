@@ -14,6 +14,17 @@ typedef struct aabb{
 	float max_x, max_y, max_z;
 } aabb_t;
 
+typedef struct hnode
+{
+	unsigned int splitLevel;
+	unsigned int primStart;
+	unsigned int primStop;
+	unsigned int ID;
+	unsigned int childrenStart;
+	unsigned int childrenStop;
+	aabb_t bbox;
+} hnode_t;
+
 int main(int argc, char** argv)
 {
 	srand ( time(NULL) );
@@ -52,7 +63,21 @@ int main(int argc, char** argv)
 	cout << "Time to load AABB data = " << tmemtrans << endl;
 	cout << "Time to build LBVH = " << texec << endl;
 	cout << "Total time = " << texec + tmemtrans << endl;
+	cout << "Expected FPS = " << 1.0f/(texec+tmemtrans) << endl;
 
+	//Get the hierarchy information
+	hnode_t* bak = new hnode_t[ gculGetHierarchySize() ];
+	gculGetHierarchyInformation( (void*)bak );
+	for( int i = 0; i < gculGetHierarchySize(); ++i )
+	{
+		cout	<< "lvl=" << bak[i].splitLevel
+				<< " min=(" << bak[i].bbox.min_x << "," << bak[i].bbox.min_y << "," << bak[i].bbox.min_z << ")"
+				<< " max=(" << bak[i].bbox.max_x << "," << bak[i].bbox.max_y << "," << bak[i].bbox.max_z << ")"
+				<< endl;
+	}
+	//
+
+	system("PAUSE");
 	return 0;
 }
 

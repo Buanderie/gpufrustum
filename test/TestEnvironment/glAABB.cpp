@@ -85,6 +85,73 @@ void glAABB::draw()
 	glEnd();
 }
 
+void glAABB::drawColor(float r, float g, float b)
+{
+	glColor3f(r, g, b);
+	glBegin(GL_QUADS);
+	glVertex3f(m_MinPos.x, m_MinPos.y, m_MinPos.z);
+	glVertex3f(m_MinPos.x, m_MaxPos.y, m_MinPos.z);
+	glVertex3f(m_MaxPos.x, m_MaxPos.y, m_MinPos.z);
+	glVertex3f(m_MaxPos.x, m_MinPos.y, m_MinPos.z);
+
+	glVertex3f(m_MinPos.x, m_MinPos.y, m_MaxPos.z);
+	glVertex3f(m_MinPos.x, m_MaxPos.y, m_MaxPos.z);
+	glVertex3f(m_MaxPos.x, m_MaxPos.y, m_MaxPos.z);
+	glVertex3f(m_MaxPos.x, m_MinPos.y, m_MaxPos.z);
+
+	glVertex3f(m_MinPos.x, m_MinPos.y, m_MinPos.z);
+	glVertex3f(m_MinPos.x, m_MinPos.y, m_MaxPos.z);
+	glVertex3f(m_MinPos.x, m_MaxPos.y, m_MaxPos.z);
+	glVertex3f(m_MinPos.x, m_MaxPos.y, m_MinPos.z);
+
+	glVertex3f(m_MaxPos.x, m_MinPos.y, m_MinPos.z);
+	glVertex3f(m_MaxPos.x, m_MaxPos.y, m_MinPos.z);
+	glVertex3f(m_MaxPos.x, m_MaxPos.y, m_MaxPos.z);
+	glVertex3f(m_MaxPos.x, m_MinPos.y, m_MaxPos.z);
+
+	glVertex3f(m_MinPos.x, m_MinPos.y, m_MinPos.z);
+	glVertex3f(m_MinPos.x, m_MinPos.y, m_MaxPos.z);
+	glVertex3f(m_MaxPos.x, m_MinPos.y, m_MaxPos.z);
+	glVertex3f(m_MaxPos.x, m_MinPos.y, m_MinPos.z);
+
+	glVertex3f(m_MinPos.x, m_MaxPos.y, m_MinPos.z);
+	glVertex3f(m_MinPos.x, m_MaxPos.y, m_MaxPos.z);
+	glVertex3f(m_MaxPos.x, m_MaxPos.y, m_MaxPos.z);
+	glVertex3f(m_MaxPos.x, m_MaxPos.y, m_MinPos.z);
+	glEnd();
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glBegin(GL_LINES);
+	glVertex3f( m_MinPos.x, m_MinPos.y, m_MinPos.z );
+	glVertex3f( m_MaxPos.x, m_MinPos.y, m_MinPos.z );
+	glVertex3f( m_MaxPos.x, m_MinPos.y, m_MinPos.z );
+	glVertex3f( m_MaxPos.x, m_MaxPos.y, m_MinPos.z );
+	glVertex3f( m_MaxPos.x, m_MaxPos.y, m_MinPos.z );
+	glVertex3f( m_MinPos.x, m_MaxPos.y, m_MinPos.z );
+	glVertex3f( m_MinPos.x, m_MaxPos.y, m_MinPos.z );
+	glVertex3f( m_MinPos.x, m_MinPos.y, m_MinPos.z );
+	//
+	glVertex3f( m_MinPos.x, m_MinPos.y, m_MaxPos.z );
+	glVertex3f( m_MaxPos.x, m_MinPos.y, m_MaxPos.z );
+	glVertex3f( m_MaxPos.x, m_MinPos.y, m_MaxPos.z );
+	glVertex3f( m_MaxPos.x, m_MaxPos.y, m_MaxPos.z );
+	glVertex3f( m_MaxPos.x, m_MaxPos.y, m_MaxPos.z );
+	glVertex3f( m_MinPos.x, m_MaxPos.y, m_MaxPos.z );
+	glVertex3f( m_MinPos.x, m_MaxPos.y, m_MaxPos.z );
+	glVertex3f( m_MinPos.x, m_MinPos.y, m_MaxPos.z );
+	//
+	glVertex3f( m_MinPos.x, m_MinPos.y, m_MinPos.z );
+	glVertex3f( m_MinPos.x, m_MinPos.y, m_MaxPos.z );
+	glVertex3f( m_MaxPos.x, m_MinPos.y, m_MinPos.z );
+	glVertex3f( m_MaxPos.x, m_MinPos.y, m_MaxPos.z );
+
+	glVertex3f( m_MinPos.x, m_MaxPos.y, m_MinPos.z );
+	glVertex3f( m_MinPos.x, m_MaxPos.y, m_MaxPos.z );
+	glVertex3f( m_MaxPos.x, m_MaxPos.y, m_MinPos.z );
+	glVertex3f( m_MaxPos.x, m_MaxPos.y, m_MaxPos.z );
+	glEnd();
+}
+
 void glAABB::extractCornersData( float* out )
 {
 	out[0] = m_MinPos.x;
