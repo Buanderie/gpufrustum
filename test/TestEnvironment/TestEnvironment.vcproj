@@ -88,7 +88,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy ..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\ext\SFML-1.4\lib\vc2008\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\ext\Glut\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\gpuCuller\lib\Debug\gpuCuller-d.dll .\Debug\gpuCuller-d.dll&#x0D;&#x0A;copy $(NVSDKCUDA_ROOT)\common\lib\cutil32.dll .\Debug\cutil32.dll&#x0D;&#x0A;"
+				CommandLine="copy ..\..\gpuCuller\lib\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\ext\SFML-1.4\lib\vc2008\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\ext\Glut\*.dll .\$(ConfigurationName)\&#x0D;&#x0A;copy ..\..\gpuCuller\lib\Debug\gpuCuller-d.dll .\Debug\gpuCuller-d.dll&#x0D;&#x0A;copy $(NVSDKCOMPUTE_ROOT)\C\common\lib\cutil32.dll .\Debug\cutil32.dll&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration

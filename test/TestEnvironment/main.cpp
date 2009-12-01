@@ -39,8 +39,26 @@ typedef struct hnode
 	unsigned int ID;
 	unsigned int childrenStart;
 	unsigned int childrenStop;
+	bool visible;
 	aabb_t bbox;
 } hnode_t;
+
+//Frustum plane
+typedef struct plane
+{
+	float a;
+	float b;
+	float c;
+	float d;
+} plane_t;
+//
+
+//Pyramidal Frustum
+typedef struct pyrfrustum
+{
+	plane_t planes[6];
+} pyrfrustum_t;
+//
 /////////////////////////////////////////////////////////////
 
 int main(int argc, char** argv)
@@ -78,18 +96,32 @@ int main(int argc, char** argv)
 
 	srand( time( NULL ) );
 
-	int nAABB = 512;
+	int nAABB = 2048;
+	int nFrustum = 5;
 
 	generateRandomAABBs(	nAABB,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
 							-90, 90,
-							0, 0,
+							0, 10,
 							-90, 90,
 							aabbList
 							);
 
+	generateRandomPyrFrustums(	nFrustum,
+								45, 90,
+								1, 2,
+								5, 50,
+								3.0f/4.0f, 3.0f/4.0f,
+								-50, 50,
+								0, 0,
+								0, 50,
+								0, 0,
+								-180, 180,
+								0, 0,
+								frustumList ); 
+	
 	//Initialize gpuCuller
 	gculInitialize( argc, argv );
 	gculSetBVHDepth( 3 );
@@ -108,16 +140,23 @@ int main(int argc, char** argv)
 	gculLoadAABB( nAABB, (void*)pol );
 	gculBuildLBVH();
 
+	pyrfrustum_t* frustumPlanesData = new pyrfrustum_t[nFrustum];
+	float* frustumCornersData = new float[nFrustum*24];
+	getFrustumPlanesArray( frustumList, (float*)frustumPlanesData );
+	gculLoadFrustumPlanes( nFrustum, (void*)frustumPlanesData );
+	getFrustumCornersArray( frustumList, frustumCornersData );
+	gculLoadFrustumCorners( nFrustum, (void*)frustumCornersData );
+
 	//Get the hierarchy information
 	hnode_t* bak = new hnode_t[ gculGetHierarchySize() ];
 	gculGetHierarchyInformation( (void*)bak );
-	/*for( int i = 0; i < gculGetHierarchySize(); ++i )
+	for( int i = 0; i < gculGetHierarchySize(); ++i )
 	{
 		cout	<< "lvl=" << bak[i].splitLevel
 				<< " min=(" << bak[i].bbox.min_x << "," << bak[i].bbox.min_y << "," << bak[i].bbox.min_z << ")"
 				<< " max=(" << bak[i].bbox.max_x << "," << bak[i].bbox.max_y << "," << bak[i].bbox.max_z << ")"
 				<< endl;
-	}*/
+	}
 
     // Start game loop
     while (App.IsOpened())
@@ -180,29 +219,38 @@ int main(int argc, char** argv)
 
 		drawFloorGrid( );
 
+		//God help us
+	//
+		unsigned int * tarace = new unsigned int[nAABB];
+		gculProcessCulling();
+		gculGetResults(tarace);
+		//for( int i = 0 ;i < 512; ++i )
+		//	cout << tarace[i] << endl;
+	//
+
 		//display aabbs
 		for( int i = 0; i < aabbList.size(); ++i )
 		{
-			aabbList[i].isInsideFrustum = true;
+			if( tarace[i] == 777 )
+				aabbList[i].isInsideFrustum = true;
+			else
+				aabbList[i].isInsideFrustum = false;
 			aabbList[i].draw();
 		}
-		//display first level
-		for(int i = 0; i < 4; ++i )
+
+		/*for(int i = 0; i < gculGetHierarchySize(); ++i )
 		{
 			glAABB chatte(	glVector4f(bak[i].bbox.min_x,bak[i].bbox.min_z,bak[i].bbox.min_y,0),
 							glVector4f(bak[i].bbox.max_x,bak[i].bbox.max_z,bak[i].bbox.max_y,0)
 							);
-			chatte.draw();
-										
-		}
-		for(int i = 5; i < 9; ++i )
-		{
-			glAABB chatte(	glVector4f(bak[i].bbox.min_x,bak[i].bbox.min_z,bak[i].bbox.min_y,0),
-							glVector4f(bak[i].bbox.max_x,bak[i].bbox.max_z,bak[i].bbox.max_y,0)
-							);
-			//chatte.draw();
-										
-		}
+			if( bak[i].visible )
+				chatte.isInsideFrustum = true;
+			if( bak[i].splitLevel == 3)
+				chatte.draw();
+		}*/
+
+		for( int i = 0; i < frustumList.size(); ++i )
+			frustumList[i].draw();
 		//
 
         // Finally, display rendered frame on screen
@@ -214,4 +262,5 @@ int main(int argc, char** argv)
 	delete cam;
 
     return EXIT_SUCCESS;
+
  }

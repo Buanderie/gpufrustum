@@ -139,7 +139,7 @@ void LBVH_sort_by_code()
 {
 	// strip out the morton codes from each bvhnode
     thrust::device_vector<unsigned int> codes(universeElementCount);
-    thrust::transform(d_BVHNODE, d_BVHNODE + universeElementCount, codes.begin(), bvhnode_to_mortonCode());
+    thrust::transform(d_BVHNODE, d_BVHNODE + universeElementCount-1, codes.begin(), bvhnode_to_mortonCode());
 	
 	// sort by the mortonCodes
     thrust::sort_by_key(codes.begin(), codes.end(), d_BVHNODE);
@@ -257,6 +257,8 @@ void LBVH_build_hierarchy2()
 	//sort the shit by ID...
 	thrust::sort_by_key(idlol.begin(), idlol.end(), d_HIERARCHY);
 	//
+	cudaThreadSynchronize();
+
 	ComputeChildrenStop<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
 	return;
@@ -284,4 +286,15 @@ void LBVH_BVH_Refit()
 		ComputeBVHRefit<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), thrust::raw_pointer_cast(d_BVHNODE), universeElementCount, sz, i, bvhDepth );
 		cudaThreadSynchronize();
 	}
+}
+
+void LBVH_Cleanup()
+{
+	//Release memory used by temporary data
+	//Release original AABB data
+	thrust::device_free(d_AABB);
+	//Release split list
+	thrust::device_free(d_SPLITSLIST);
+	//
+	//PROFIT
 }

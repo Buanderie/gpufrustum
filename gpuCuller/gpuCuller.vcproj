@@ -33,7 +33,7 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
-				Include="$(NVSDKCUDA_ROOT)\common\inc;.\inc;.\ext\thrust;.\kernel"
+				Include="$(NVSDKCOMPUTE_ROOT)\C\common\inc;.\inc;.\ext\thrust;.\kernel"
 				Debug="true"
 				Arch="13"
 				Emulation="false"
@@ -75,7 +75,7 @@
 				AdditionalDependencies="cuda.lib cudart.lib cutil32.lib"
 				OutputFile=".\lib\$(ConfigurationName)\$(ProjectName)-d.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(NVSDKCUDA_ROOT)\common\lib"
+				AdditionalLibraryDirectories="&quot;$(CUDA_LIB_PATH)&quot;;&quot;$(NVSDKCOMPUTE_ROOT)\C\common\lib&quot;"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -209,6 +209,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\gpuCuller_FrustumCulling.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+						Emulation="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\gpuCuller_LBVH.cu"
 				>
 			</File>
@@ -220,6 +232,18 @@
 		<Filter
 			Name="Kernels"
 			>
+			<File
+				RelativePath=".\kernel\gpuCuller_FrustumCulling_kernel.cu"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="CUDA Build Rule"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath=".\kernel\gpuCuller_LBVH_kernel.cu"
 				>

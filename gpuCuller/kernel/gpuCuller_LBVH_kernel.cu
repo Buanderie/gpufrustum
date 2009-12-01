@@ -23,12 +23,12 @@ __global__ void AssignMortonCode(	aabb_t* aabbPtr, bvhnode_t* bvhPtr, unsigned i
 									float max_z)
 {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
-	
-	//Store the primitive index
-	bvhPtr[ i ].primIndex = i;
 
 	if(i > elementCount )
 		return;
+
+	//Store the primitive index
+	bvhPtr[ i ].primIndex = i;
 
 	//Compute AABB centroid
 	float cx = (aabbPtr[ i ].min.x + aabbPtr[ i ].max.x)/2.0f;
@@ -40,7 +40,8 @@ __global__ void AssignMortonCode(	aabb_t* aabbPtr, bvhnode_t* bvhPtr, unsigned i
 	//
 
 	//Copy AABB data
-	bvhPtr[ i ].bbox = aabbPtr[i];
+	bvhPtr[ i ].bbox.min = aabbPtr[i].min;
+	bvhPtr[ i ].bbox.max = aabbPtr[i].max;
 	//
 
 	//Compute Morton Code
@@ -190,6 +191,8 @@ __global__ void ComputeChildrenStart( hnode_t* h, unsigned int elementCount, uns
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if( i >= hierarchySize )
 		return;
+
+	h[ i ].visible = false;
 
 	if( h[ i ].splitLevel >= maxDepth )
 	{

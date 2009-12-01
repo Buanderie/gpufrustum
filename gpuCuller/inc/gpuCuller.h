@@ -22,10 +22,22 @@ GPUCULLER_API
 void __stdcall gculLoadAABB( unsigned int size, const void* ptr );
 
 GPUCULLER_API
+void __stdcall gculLoadFrustumPlanes( unsigned int size, const void* ptr );
+
+GPUCULLER_API
+void __stdcall gculLoadFrustumCorners( unsigned int size, const void* ptr );
+
+GPUCULLER_API
 void __stdcall gculReleaseAABB();
 
 GPUCULLER_API
 void __stdcall gculBuildLBVH();
+
+GPUCULLER_API
+void __stdcall gculFreeLBVH();
+
+GPUCULLER_API
+void __stdcall gculProcessCulling();
 
 GPUCULLER_API
 void __stdcall gculSetBVHDepth( unsigned int depth );
@@ -38,6 +50,9 @@ unsigned int __stdcall gculGetHierarchySize();
 
 GPUCULLER_API
 void __stdcall gculGetHierarchyInformation( void* data );
+
+GPUCULLER_API
+void __stdcall gculGetResults(void* data);
 
 #endif
 

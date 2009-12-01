@@ -68,14 +68,15 @@ int main(int argc, char** argv)
 	//Get the hierarchy information
 	hnode_t* bak = new hnode_t[ gculGetHierarchySize() ];
 	gculGetHierarchyInformation( (void*)bak );
-	for( int i = 0; i < gculGetHierarchySize(); ++i )
+	/*for( int i = 0; i < gculGetHierarchySize(); ++i )
 	{
 		cout	<< "lvl=" << bak[i].splitLevel
 				<< " min=(" << bak[i].bbox.min_x << "," << bak[i].bbox.min_y << "," << bak[i].bbox.min_z << ")"
 				<< " max=(" << bak[i].bbox.max_x << "," << bak[i].bbox.max_y << "," << bak[i].bbox.max_z << ")"
 				<< endl;
-	}
+	}*/
 	//
+	gculProcessCulling();
 
 	system("PAUSE");
 	return 0;

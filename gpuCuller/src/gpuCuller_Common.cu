@@ -104,3 +104,48 @@ void __stdcall gculGetHierarchyInformation( void* data )
 {
 	cudaMemcpy(data, thrust::raw_pointer_cast(d_HIERARCHY), sizeof(hnode_t)*(LBVH_compute_hierachy_mem_size()), cudaMemcpyDeviceToHost);
 }
+
+void __stdcall gculFreeLBVH()
+{
+	//Release memory used by temporary data
+	//Release original AABB data
+	thrust::device_free(d_BVHNODE);
+	//Release split list
+	thrust::device_free(d_HIERARCHY);
+	//
+	//PROFIT
+}
+
+void __stdcall gculLoadFrustumPlanes( unsigned int N, const void* ptr )
+{
+	//Load Pyramidal Frustum data onto Device (AoS code)
+	cout << "FUCK " << sizeof(pyrfrustum_t) << endl;
+	pyrfrustum_t * pyr_raw_ptr;
+    cudaMalloc((void **) &pyr_raw_ptr, N * sizeof(pyrfrustum_t));
+	cudaMemcpy(pyr_raw_ptr, ptr, sizeof(pyrfrustum_t)*N, cudaMemcpyHostToDevice);
+	d_PYRFRUSTUM = thrust::device_ptr<pyrfrustum_t>(pyr_raw_ptr);
+	pyrFrustumCount = N;
+	return;
+}
+
+void __stdcall gculLoadFrustumCorners( unsigned int N, const void* ptr )
+{
+	//Load Pyramidal Frustum data onto Device (AoS code)
+	pyrcorners_t * pyr_raw_ptr;
+    cudaMalloc((void **) &pyr_raw_ptr, N * sizeof(pyrcorners_t));
+	cudaMemcpy(pyr_raw_ptr, ptr, sizeof(pyrcorners_t)*N, cudaMemcpyHostToDevice);
+	d_PYRCORNERS = thrust::device_ptr<pyrcorners_t>(pyr_raw_ptr);
+	pyrFrustumCount = N;
+	return;
+}
+
+void __stdcall gculProcessCulling()
+{
+	FrustumCulling();
+	return;
+}
+
+void __stdcall gculGetResults(void* data)
+{
+	cudaMemcpy(data, thrust::raw_pointer_cast(d_OUTPUT), sizeof(unsigned int)*universeElementCount, cudaMemcpyDeviceToHost);
+}

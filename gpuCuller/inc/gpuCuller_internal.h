@@ -42,9 +42,35 @@ typedef struct hnode
 	unsigned int ID;
 	unsigned int childrenStart;
 	unsigned int childrenStop;
+	bool visible;
 	aabb_t bbox;
 } hnode_t;
 //
+
+//Frustum plane
+typedef struct plane
+{
+	float a;
+	float b;
+	float c;
+	float d;
+} plane_t;
+//
+
+//Pyramidal Frustum
+typedef struct pyrfrustum
+{
+	plane_t planes[6];
+} pyrfrustum_t;
+//
+
+//Pyramidal Frustum Corners
+typedef struct pyrcorners
+{
+	vec3_t points[8];
+} pyrcorners_t;
+//
+
 //---------------------------------
 
 //-------- Data References --------
@@ -52,8 +78,12 @@ extern thrust::device_ptr<aabb_t> d_AABB;
 extern thrust::device_ptr<bvhnode_t> d_BVHNODE;
 extern thrust::device_ptr<lbvhsplit_t> d_SPLITSLIST;
 extern thrust::device_ptr<hnode_t> d_HIERARCHY;
+extern thrust::device_ptr<pyrfrustum_t> d_PYRFRUSTUM;
+extern thrust::device_ptr<pyrcorners_t> d_PYRCORNERS;
+extern thrust::device_ptr<unsigned int> d_OUTPUT;
 extern unsigned int universeElementCount;
 extern unsigned int bvhDepth;
+extern unsigned int pyrFrustumCount;
 extern aabb_t universeAABB;
 //---------------------------------
 
@@ -67,6 +97,10 @@ void LBVH_build_hierarchy1();
 void LBVH_build_hierarchy2();
 unsigned int LBVH_compute_hierachy_mem_size();
 void LBVH_BVH_Refit();
+void LBVH_Cleanup();
 //---------------------------------
 
+//--------- Frustum Culling -------
+void FrustumCulling();
+//---------------------------------
 #endif
