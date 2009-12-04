@@ -83,7 +83,7 @@ void LBVH_assign_morton_code()
     cudaGetDeviceProperties(&deviceProp, 0);
 	const unsigned int maxGridDim = deviceProp.maxGridSize[0];
 	const unsigned int maxBlockDim = deviceProp.maxThreadsDim[0];
-	const unsigned int gridDim = max( 1, universeElementCount / maxBlockDim );
+	const unsigned int gridDim = max( 1, (int)ceil((float)universeElementCount / (float)maxBlockDim) );
 
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
@@ -102,13 +102,13 @@ void LBVH_assign_morton_code()
 void LBVH_CheckNodeData()
 {
 	//
-	/*lbvhsplit_t* pol = new lbvhsplit_t[ universeElementCount*bvhDepth ];
-	cudaMemcpy(pol, thrust::raw_pointer_cast(d_SPLITSLIST), sizeof(lbvhsplit_t)*universeElementCount*bvhDepth, cudaMemcpyDeviceToHost);
+	lbvhsplit_t* pol1 = new lbvhsplit_t[ universeElementCount*bvhDepth ];
+	cudaMemcpy(pol1, thrust::raw_pointer_cast(d_SPLITSLIST), sizeof(lbvhsplit_t)*universeElementCount*bvhDepth, cudaMemcpyDeviceToHost);
 	for( int i = 0; i < universeElementCount*bvhDepth; ++i )
 	{
-		if( pol[i].level < 100000 )
-		cout << pol[i].level << "[ " << pol[i].primIndex << " ]" << endl;
-	}*/
+		if( pol1[i].level < 100000 )
+		cout << pol1[i].level << "[ " << pol1[i].primIndex << " ]" << endl;
+	}
 	//
 
 	//
@@ -129,8 +129,8 @@ void LBVH_CheckNodeData()
 	{
 		cout	<< bak[i].ID << " - lvl=" << bak[i].splitLevel << " [ " << bak[i].primStart << " ; " << bak[i].primStop << " ] ~ " 
 				<< "{ " << bak[i].childrenStart << " ; " << bak[i].childrenStop << " }" 
-				<< " - (" << bak[i].bbox.min.x << ";" << bak[i].bbox.min.y << ") "
-				<< " - (" << bak[i].bbox.max.x << ";" << bak[i].bbox.max.y << ") "<< endl;
+				<< " - (" << bak[i].bbox.min.x << ";" << bak[i].bbox.min.z << ") "
+				<< " - (" << bak[i].bbox.max.x << ";" << bak[i].bbox.max.z << ") "<< endl;
 	}
 	//
 }
@@ -139,7 +139,7 @@ void LBVH_sort_by_code()
 {
 	// strip out the morton codes from each bvhnode
     thrust::device_vector<unsigned int> codes(universeElementCount);
-    thrust::transform(d_BVHNODE, d_BVHNODE + universeElementCount-1, codes.begin(), bvhnode_to_mortonCode());
+    thrust::transform(d_BVHNODE, d_BVHNODE + universeElementCount, codes.begin(), bvhnode_to_mortonCode());
 	
 	// sort by the mortonCodes
     thrust::sort_by_key(codes.begin(), codes.end(), d_BVHNODE);
@@ -164,7 +164,7 @@ void LBVH_compute_split_levels()
     cudaGetDeviceProperties(&deviceProp, 0);
 	const unsigned int maxGridDim = deviceProp.maxGridSize[0];
 	const unsigned int maxBlockDim = deviceProp.maxThreadsDim[0];
-	const unsigned int gridDim = max( 1, universeElementCount / maxBlockDim );
+	const unsigned int gridDim = max( 1, (int)ceil((float)universeElementCount / (float)maxBlockDim) );
 
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
@@ -215,7 +215,7 @@ void LBVH_build_hierarchy1()
     cudaGetDeviceProperties(&deviceProp, 0);
 	const unsigned int maxGridDim = deviceProp.maxGridSize[0];
 	const unsigned int maxBlockDim = deviceProp.maxThreadsDim[0];
-	const unsigned int gridDim = max( 1, sz / maxBlockDim );
+	const unsigned int gridDim = max( 1, (int)ceil((float)sz / (float)maxBlockDim) );
 
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
@@ -244,13 +244,16 @@ void LBVH_build_hierarchy2()
     cudaGetDeviceProperties(&deviceProp, 0);
 	const unsigned int maxGridDim = deviceProp.maxGridSize[0];
 	const unsigned int maxBlockDim = deviceProp.maxThreadsDim[0];
-	const unsigned int gridDim = max( 1, sz / maxBlockDim );
+	const unsigned int gridDim = max( 1, (int)ceil((float)sz / (float)maxBlockDim) );
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
+
+	cout << "POL = " << gridDim << " BAK = " << maxBlockDim << endl;
 	ComputeChildrenStart<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
 	//
 
+	
 	// strip out the ID from each hnode
     thrust::device_vector<unsigned int> idlol(sz);
     thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), idlol.begin(), hnode_to_ID());
@@ -258,9 +261,10 @@ void LBVH_build_hierarchy2()
 	thrust::sort_by_key(idlol.begin(), idlol.end(), d_HIERARCHY);
 	//
 	cudaThreadSynchronize();
-
+	
 	ComputeChildrenStop<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
+	
 	return;
 }
 
@@ -275,7 +279,7 @@ void LBVH_BVH_Refit()
     cudaGetDeviceProperties(&deviceProp, 0);
 	const unsigned int maxGridDim = deviceProp.maxGridSize[0];
 	const unsigned int maxBlockDim = deviceProp.maxThreadsDim[0];
-	const unsigned int gridDim = max( 1, sz / maxBlockDim );
+	const unsigned int gridDim = max( 1, (int)ceil((float)sz / (float)maxBlockDim) );
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
 	//
@@ -297,4 +301,11 @@ void LBVH_Cleanup()
 	thrust::device_free(d_SPLITSLIST);
 	//
 	//PROFIT
+
+	// As hierarchy is built, prepare memory for culling result
+	unsigned int * dpolbak = 0;
+	cudaMalloc((void **) &dpolbak, pyrFrustumCount*universeElementCount*sizeof(unsigned int));
+	d_OUTPUT = thrust::device_ptr<unsigned int>(dpolbak);
+	thrust::fill(d_OUTPUT, d_OUTPUT + pyrFrustumCount*universeElementCount, 0);
+	//
 }

@@ -14,4 +14,5 @@ unsigned int universeElementCount;
 unsigned int pyrFrustumCount;
 unsigned int bvhDepth;
 aabb_t universeAABB;
+texture<hnode_t, 1, cudaReadModeElementType> texHIERARCHY;
 //---------------------------------

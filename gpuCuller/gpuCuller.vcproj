@@ -37,6 +37,9 @@
 				Debug="true"
 				Arch="13"
 				Emulation="false"
+				Optimization="0"
+				RuntimeChecks="1"
+				TypeInfo="true"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -211,14 +214,6 @@
 			<File
 				RelativePath=".\src\gpuCuller_FrustumCulling.cu"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="CUDA Build Rule"
-						Emulation="false"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\gpuCuller_LBVH.cu"

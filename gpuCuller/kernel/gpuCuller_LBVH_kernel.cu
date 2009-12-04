@@ -36,16 +36,20 @@ __global__ void AssignMortonCode(	aabb_t* aabbPtr, bvhnode_t* bvhPtr, unsigned i
 	float cz = (aabbPtr[ i ].min.z + aabbPtr[ i ].max.z)/2.0f;
 	bvhPtr[ i ].centroid.x = cx;
 	bvhPtr[ i ].centroid.y = cy;
-	bvhPtr[ i ].centroid.y = cz;
+	bvhPtr[ i ].centroid.z = cz;
 	//
 
 	//Copy AABB data
-	bvhPtr[ i ].bbox.min = aabbPtr[i].min;
-	bvhPtr[ i ].bbox.max = aabbPtr[i].max;
+	bvhPtr[ i ].bbox = aabbPtr[i];
 	//
 
 	//Compute Morton Code
 	unsigned int morton = 0;
+	unsigned int mypow = 1;
+	
+	for( int k = depth-1; k > 0; --k )
+		mypow *= 10;
+
 	for( int k = depth-1; k >= 0; --k )
 	{
 		unsigned int tmp_code = 1;
@@ -61,19 +65,21 @@ __global__ void AssignMortonCode(	aabb_t* aabbPtr, bvhnode_t* bvhPtr, unsigned i
 			max_x = ((max_x+min_x)/2.0f);
 		}
 
-		//Check Y Axis
-		if( cy >= (min_y+max_y)/2.0f )
+		//Check Z Axis
+		if( cz >= (min_z+max_z)/2.0f )
 		{
 			tmp_code += 1;
-			min_y = ((max_y+min_y)/2.0f);
+			min_z = ((max_z+min_z)/2.0f);
 		}
 		else
 		{
 			//tmp_code += 1;
-			max_y = ((max_y+min_y)/2.0f);
+			max_z = ((max_z+min_z)/2.0f);
 		}
 		
-		morton += (unsigned int)(ceilf(powf( 10.0f, (float)k ))) * tmp_code;
+		//morton += (unsigned int)(ceilf(powf( 10.0f, (float)k ))) * tmp_code;
+		morton += mypow * tmp_code;
+		mypow /= 10;
 	}
 	bvhPtr[ i ].mortonCode = morton;
 	//printf( "Morton Code = %i \n", morton );
@@ -103,7 +109,7 @@ __global__ void ComputeSplitLevel( bvhnode_t* bvhPtr, lbvhsplit_t* split, unsign
 	//
 //
 
-	for( int k = maxDepth-1; k>=0; --k )
+	for( int k = maxDepth; k>=0; --k )
 	{
 		//Extract the k-th digit of the two guys
 		a = extractDigit( code_a, k );
@@ -166,7 +172,7 @@ __global__ void ComputeHNodeIntervals( lbvhsplit_t* split, hnode_t* hierarchy, u
 	else
 	{
 		//Discard the node
-		//hierarchy[ i ].ID = 99999999;
+		hierarchy[ i ].ID = 99999999;
 		hierarchy[ i ].primStart = 99999999;
 		hierarchy[ i ].primStop = 99999999;
 		hierarchy[ i ].splitLevel = 99999999;
@@ -175,9 +181,9 @@ __global__ void ComputeHNodeIntervals( lbvhsplit_t* split, hnode_t* hierarchy, u
 	//Last check...
 	//If the lower primitive bound is greater than or equal to the upper bound
 	//we discard the node (~ ID = 99999999 and primStart=99999999 and primStop=99999999)
-	if( hierarchy[ i ].primStart >= hierarchy[ i ].primStop )
+	if( hierarchy[ i ].primStart > hierarchy[ i ].primStop )
 	{
-		//hierarchy[ i ].ID = 99999999;
+		hierarchy[ i ].ID = 99999999;
 		hierarchy[ i ].primStart = 99999999;
 		hierarchy[ i ].primStop = 99999999;
 		hierarchy[ i ].splitLevel = 99999999;
@@ -223,7 +229,10 @@ __global__ void ComputeChildrenStop( hnode_t* h, unsigned int elementCount, unsi
 
 	if( h[ i ]. splitLevel == h[ i + 1 ]. splitLevel )
 	{
-		h[i].childrenStop = h[i+1].childrenStart-1;
+		if( h[i+1].childrenStart <= hierarchySize )
+			h[i].childrenStop = h[i+1].childrenStart-1;
+		else
+			h[i].childrenStop = h[i].childrenStart;
 	}
 	else
 		h[i].childrenStop = h[i].childrenStart+3;
@@ -275,7 +284,7 @@ __global__ void ComputeBVHRefit( hnode_t* h, bvhnode_t* prim, unsigned int eleme
 			float max_x = -99999999;
 			float max_y = -99999999;
 			float max_z = -99999999;
-			for( int k = h[i].childrenStart; k <= min(h[i].childrenStop, hierarchySize ); ++k )
+			for( int k = h[i].childrenStart; k <= h[i].childrenStop; ++k )
 			{
 				if( h[k].splitLevel <= maxDepth )
 				{

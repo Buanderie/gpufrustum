@@ -23,6 +23,7 @@ vector<glPyramidalFrustum> frustumList;
 vector<glAABB> aabbList;
 vector<glSphere> sphereList;
 vector<glSphere> sphericalFrustumList;
+int visibleFrustum;
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
     //Setup a perspective projection
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(90.f, 1.f, 1.f, 100.f);
+    gluPerspective(90.f, 1.f, 1.f, 1000.f);
 
 	//Mise en place des parametres camera
 	cam = new glCamera();
@@ -96,8 +97,9 @@ int main(int argc, char** argv)
 
 	srand( time( NULL ) );
 
-	int nAABB = 2048;
-	int nFrustum = 5;
+	int nAABB = 8192;
+	int nFrustum = 1000;
+	visibleFrustum = 0;
 
 	generateRandomAABBs(	nAABB,
 							1.0f, 7.0f,
@@ -114,9 +116,9 @@ int main(int argc, char** argv)
 								1, 2,
 								5, 50,
 								3.0f/4.0f, 3.0f/4.0f,
-								-50, 50,
+								-100, 100,
 								0, 0,
-								0, 50,
+								0, 100,
 								0, 0,
 								-180, 180,
 								0, 0,
@@ -124,22 +126,20 @@ int main(int argc, char** argv)
 	
 	//Initialize gpuCuller
 	gculInitialize( argc, argv );
-	gculSetBVHDepth( 3 );
+	gculSetBVHDepth( 5 );
 	gculSetUniverseAABB( -100, -100, -100, 100, 100, 100 );
 	//Load AABB
 	aabb_t* pol = new aabb_t[nAABB];
 	for( int i = 0; i < aabbList.size(); ++i )
 	{
 		pol[ i ].min_x = aabbList[i].m_MinPos.x;
-		pol[ i ].min_y = aabbList[i].m_MinPos.z;
-		pol[ i ].min_z = aabbList[i].m_MinPos.y;
+		pol[ i ].min_y = aabbList[i].m_MinPos.y;
+		pol[ i ].min_z = aabbList[i].m_MinPos.z;
 		pol[ i ].max_x = aabbList[i].m_MaxPos.x;
-		pol[ i ].max_y = aabbList[i].m_MaxPos.z;
-		pol[ i ].max_z = aabbList[i].m_MaxPos.y;
+		pol[ i ].max_y = aabbList[i].m_MaxPos.y;
+		pol[ i ].max_z = aabbList[i].m_MaxPos.z;
 	}
 	gculLoadAABB( nAABB, (void*)pol );
-	gculBuildLBVH();
-
 	pyrfrustum_t* frustumPlanesData = new pyrfrustum_t[nFrustum];
 	float* frustumCornersData = new float[nFrustum*24];
 	getFrustumPlanesArray( frustumList, (float*)frustumPlanesData );
@@ -147,16 +147,41 @@ int main(int argc, char** argv)
 	getFrustumCornersArray( frustumList, frustumCornersData );
 	gculLoadFrustumCorners( nFrustum, (void*)frustumCornersData );
 
+	gculBuildLBVH();
+
+	unsigned int * tarace = new unsigned int[nAABB*nFrustum];
+
 	//Get the hierarchy information
 	hnode_t* bak = new hnode_t[ gculGetHierarchySize() ];
 	gculGetHierarchyInformation( (void*)bak );
-	for( int i = 0; i < gculGetHierarchySize(); ++i )
+	/*for( int i = 0; i < gculGetHierarchySize(); ++i )
 	{
 		cout	<< "lvl=" << bak[i].splitLevel
 				<< " min=(" << bak[i].bbox.min_x << "," << bak[i].bbox.min_y << "," << bak[i].bbox.min_z << ")"
 				<< " max=(" << bak[i].bbox.max_x << "," << bak[i].bbox.max_y << "," << bak[i].bbox.max_z << ")"
 				<< endl;
-	}
+	}*/
+
+	//God help us
+	//
+	/*gculProcessCulling();
+	gculGetResults(tarace);
+	for( int i = 0; i < nFrustum; ++i )
+	{
+		for( int j = 0; j < nAABB; ++j )
+		{
+			cout << tarace[i*nAABB + j] << " ";
+		}
+		cout << endl;
+	}*/
+	//
+
+	//Create new clock
+	sf::Clock clk;
+	//	
+
+	for( int i = 0; i < aabbList.size(); ++i )
+		aabbList[i].isInsideFrustum = false;
 
     // Start game loop
     while (App.IsOpened())
@@ -188,7 +213,7 @@ int main(int argc, char** argv)
 
 			if( Event.Type == sf::Event::KeyPressed && Event.Key.Code == sf::Key::C )
 			{
-
+				visibleFrustum++;
 			}
 			
 			if( Event.Type == sf::Event::MouseMoved )
@@ -219,41 +244,69 @@ int main(int argc, char** argv)
 
 		drawFloorGrid( );
 
-		//God help us
-	//
-		unsigned int * tarace = new unsigned int[nAABB];
+		//FRUSTUM CULLING
+		clk.Reset();
 		gculProcessCulling();
 		gculGetResults(tarace);
-		//for( int i = 0 ;i < 512; ++i )
-		//	cout << tarace[i] << endl;
-	//
-
+		float t = clk.GetElapsedTime();
+		float cullingpersecond = ( nFrustum * nAABB )/ t;
+		//printf("delta_t = %f ms | %fM culling operations per second\n", t * 1000.0f, cullingpersecond / 1000000.0f );
+		printf("%f\n", t * 1000.0f);
 		//display aabbs
-		for( int i = 0; i < aabbList.size(); ++i )
+
+		/*for( int j = 0; j < frustumList.size(); ++j )
 		{
-			if( tarace[i] == 777 )
-				aabbList[i].isInsideFrustum = true;
-			else
-				aabbList[i].isInsideFrustum = false;
-			aabbList[i].draw();
+			for( int i = 0; i < aabbList.size(); ++i )
+			{
+				if( tarace[j*nAABB + i] == 7777777 )
+					if( !(aabbList[i].isInsideFrustum) )
+					aabbList[i].isInsideFrustum = true;
+			}
 		}
-
-		/*for(int i = 0; i < gculGetHierarchySize(); ++i )
+		//
+		for( int i =0; i < aabbList.size(); ++i )
 		{
-			glAABB chatte(	glVector4f(bak[i].bbox.min_x,bak[i].bbox.min_z,bak[i].bbox.min_y,0),
-							glVector4f(bak[i].bbox.max_x,bak[i].bbox.max_z,bak[i].bbox.max_y,0)
-							);
-			if( bak[i].visible )
-				chatte.isInsideFrustum = true;
-			if( bak[i].splitLevel == 3)
-				chatte.draw();
+			aabbList[i].draw();
 		}*/
+		
+			/*for(int i = 0; i < gculGetHierarchySize(); ++i )
+			{
+				glAABB chatte(	glVector4f(bak[i].bbox.min_x,bak[i].bbox.min_y,bak[i].bbox.min_z,0),
+								glVector4f(bak[i].bbox.max_x,bak[i].bbox.max_y,bak[i].bbox.max_z,0)
+								);
+				if( bak[i].visible )
+					chatte.isInsideFrustum = true;
+				if( bak[i].splitLevel == 3 )
+				{	
+					chatte.draw();
+				}
+			}*/
 
-		for( int i = 0; i < frustumList.size(); ++i )
-			frustumList[i].draw();
+		//for( int i = 0; i < frustumList.size(); ++i )
+		//	frustumList[i].draw();
 		//
 
         // Finally, display rendered frame on screen
+
+		for( int j = 0; j < frustumList.size(); ++j )
+		{
+			if( j == visibleFrustum%nFrustum )
+			{
+				for( int i = 0; i < aabbList.size(); ++i )
+				{
+					if( tarace[j*nAABB + i] == 7777777 )
+					{
+						aabbList[i].isInsideFrustum = true;
+						aabbList[i].draw();
+					}
+					else
+						aabbList[i].isInsideFrustum = false;
+					
+				}
+				frustumList[j].draw();
+			}
+		}
+
         App.Display();
 
 		FrameRateCpt.Reset();
@@ -262,5 +315,4 @@ int main(int argc, char** argv)
 	delete cam;
 
     return EXIT_SUCCESS;
-
- }
+}

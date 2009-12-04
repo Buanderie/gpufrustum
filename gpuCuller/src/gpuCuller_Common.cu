@@ -80,6 +80,7 @@ void __stdcall gculBuildLBVH()
 	//Prepare and fill the splits list
 	LBVH_compute_split_levels();
 
+
 	//Sort the splits list by level of split
 	LBVH_sort_split_list();
 
@@ -91,8 +92,11 @@ void __stdcall gculBuildLBVH()
 
 	//Last phase : BVH Refit
 	LBVH_BVH_Refit();
+
+	//LBVH_CheckNodeData();
+
+	LBVH_Cleanup();
 	
-	LBVH_CheckNodeData();
 }
 
 unsigned int __stdcall gculGetHierarchySize()
@@ -147,5 +151,5 @@ void __stdcall gculProcessCulling()
 
 void __stdcall gculGetResults(void* data)
 {
-	cudaMemcpy(data, thrust::raw_pointer_cast(d_OUTPUT), sizeof(unsigned int)*universeElementCount, cudaMemcpyDeviceToHost);
+	cudaMemcpy(data, thrust::raw_pointer_cast(d_OUTPUT), sizeof(unsigned int)*universeElementCount*pyrFrustumCount, cudaMemcpyDeviceToHost);
 }
