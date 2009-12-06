@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestEnvironment", "test\TestEnvironment\TestEnvironment.vcproj", "{BE14CED0-FBD8-41D0-BB4C-B076BC7AE850}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33A83480-29B3-4C7D-B0B5-30973CB399F7} = {33A83480-29B3-4C7D-B0B5-30973CB399F7}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gpuCuller", "gpuCuller\gpuCuller.vcproj", "{33A83480-29B3-4C7D-B0B5-30973CB399F7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibTest", "test\LibTest\LibTest.vcproj", "{F1EA9BE9-8D00-4864-875A-A70A5CEB8AF2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33A83480-29B3-4C7D-B0B5-30973CB399F7} = {33A83480-29B3-4C7D-B0B5-30973CB399F7}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestEnvironment2", "test\TestEnvironment2\TestEnvironment2.vcproj", "{0A049D14-D744-4436-ABBB-907D10455515}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33A83480-29B3-4C7D-B0B5-30973CB399F7} = {33A83480-29B3-4C7D-B0B5-30973CB399F7}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BE14CED0-FBD8-41D0-BB4C-B076BC7AE850}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BE14CED0-FBD8-41D0-BB4C-B076BC7AE850}.Debug|Win32.Build.0 = Debug|Win32
+		{BE14CED0-FBD8-41D0-BB4C-B076BC7AE850}.Release|Win32.ActiveCfg = Release|Win32
+		{BE14CED0-FBD8-41D0-BB4C-B076BC7AE850}.Release|Win32.Build.0 = Release|Win32
+		{33A83480-29B3-4C7D-B0B5-30973CB399F7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{33A83480-29B3-4C7D-B0B5-30973CB399F7}.Debug|Win32.Build.0 = Debug|Win32
+		{33A83480-29B3-4C7D-B0B5-30973CB399F7}.Release|Win32.ActiveCfg = Release|Win32
+		{33A83480-29B3-4C7D-B0B5-30973CB399F7}.Release|Win32.Build.0 = Release|Win32
+		{F1EA9BE9-8D00-4864-875A-A70A5CEB8AF2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F1EA9BE9-8D00-4864-875A-A70A5CEB8AF2}.Debug|Win32.Build.0 = Debug|Win32
+		{F1EA9BE9-8D00-4864-875A-A70A5CEB8AF2}.Release|Win32.ActiveCfg = Release|Win32
+		{F1EA9BE9-8D00-4864-875A-A70A5CEB8AF2}.Release|Win32.Build.0 = Release|Win32
+		{0A049D14-D744-4436-ABBB-907D10455515}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0A049D14-D744-4436-ABBB-907D10455515}.Debug|Win32.Build.0 = Debug|Win32
+		{0A049D14-D744-4436-ABBB-907D10455515}.Release|Win32.ActiveCfg = Release|Win32
+		{0A049D14-D744-4436-ABBB-907D10455515}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
