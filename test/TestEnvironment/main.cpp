@@ -98,14 +98,14 @@ int main(int argc, char** argv)
 	srand( time( NULL ) );
 
 	int nAABB = 8192;
-	int nFrustum = 1000;
+	int nFrustum = 100;
 	visibleFrustum = 0;
 
 	generateRandomAABBs(	nAABB,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
 							1.0f, 7.0f,
-							-90, 90,
+							10, 90,
 							0, 10,
 							-90, 90,
 							aabbList
@@ -147,7 +147,7 @@ int main(int argc, char** argv)
 	getFrustumCornersArray( frustumList, frustumCornersData );
 	gculLoadFrustumCorners( nFrustum, (void*)frustumCornersData );
 
-	gculBuildLBVH();
+	gculBuildHierarchy();
 
 	unsigned int * tarace = new unsigned int[nAABB*nFrustum];
 
@@ -250,43 +250,9 @@ int main(int argc, char** argv)
 		gculGetResults(tarace);
 		float t = clk.GetElapsedTime();
 		float cullingpersecond = ( nFrustum * nAABB )/ t;
-		//printf("delta_t = %f ms | %fM culling operations per second\n", t * 1000.0f, cullingpersecond / 1000000.0f );
+		printf("delta_t = %f ms | %fM culling operations per second\n", t * 1000.0f, cullingpersecond / 1000000.0f );
 		printf("%f\n", t * 1000.0f);
-		//display aabbs
-
-		/*for( int j = 0; j < frustumList.size(); ++j )
-		{
-			for( int i = 0; i < aabbList.size(); ++i )
-			{
-				if( tarace[j*nAABB + i] == 7777777 )
-					if( !(aabbList[i].isInsideFrustum) )
-					aabbList[i].isInsideFrustum = true;
-			}
-		}
 		//
-		for( int i =0; i < aabbList.size(); ++i )
-		{
-			aabbList[i].draw();
-		}*/
-		
-			/*for(int i = 0; i < gculGetHierarchySize(); ++i )
-			{
-				glAABB chatte(	glVector4f(bak[i].bbox.min_x,bak[i].bbox.min_y,bak[i].bbox.min_z,0),
-								glVector4f(bak[i].bbox.max_x,bak[i].bbox.max_y,bak[i].bbox.max_z,0)
-								);
-				if( bak[i].visible )
-					chatte.isInsideFrustum = true;
-				if( bak[i].splitLevel == 3 )
-				{	
-					chatte.draw();
-				}
-			}*/
-
-		//for( int i = 0; i < frustumList.size(); ++i )
-		//	frustumList[i].draw();
-		//
-
-        // Finally, display rendered frame on screen
 
 		for( int j = 0; j < frustumList.size(); ++j )
 		{
@@ -301,7 +267,6 @@ int main(int argc, char** argv)
 					}
 					else
 						aabbList[i].isInsideFrustum = false;
-					
 				}
 				frustumList[j].draw();
 			}

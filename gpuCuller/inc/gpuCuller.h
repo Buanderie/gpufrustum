@@ -28,13 +28,19 @@ GPUCULLER_API
 void __stdcall gculLoadFrustumCorners( unsigned int size, const void* ptr );
 
 GPUCULLER_API
-void __stdcall gculReleaseAABB();
+void __stdcall gculFreeAABB();
 
 GPUCULLER_API
-void __stdcall gculBuildLBVH();
+void __stdcall gculFreeFrustumPlanes();
 
 GPUCULLER_API
-void __stdcall gculFreeLBVH();
+void __stdcall gculFreeFrustumCorners();
+
+GPUCULLER_API
+void __stdcall gculBuildHierarchy();
+
+GPUCULLER_API
+void __stdcall gculFreeHierarchy();
 
 GPUCULLER_API
 void __stdcall gculProcessCulling();

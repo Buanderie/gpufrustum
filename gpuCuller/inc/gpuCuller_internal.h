@@ -85,6 +85,7 @@ extern unsigned int universeElementCount;
 extern unsigned int bvhDepth;
 extern unsigned int pyrFrustumCount;
 extern aabb_t universeAABB;
+texture<hnode_t, 1, cudaReadModeElementType> texHIERARCHY;
 //---------------------------------
 
 //-------- LBVH Code --------------
@@ -98,6 +99,7 @@ void LBVH_build_hierarchy2();
 unsigned int LBVH_compute_hierachy_mem_size();
 void LBVH_BVH_Refit();
 void LBVH_Cleanup();
+void LBVH_Build();
 //---------------------------------
 
 //--------- Frustum Culling -------

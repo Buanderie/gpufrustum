@@ -307,5 +307,38 @@ void LBVH_Cleanup()
 	cudaMalloc((void **) &dpolbak, pyrFrustumCount*universeElementCount*sizeof(unsigned int));
 	d_OUTPUT = thrust::device_ptr<unsigned int>(dpolbak);
 	thrust::fill(d_OUTPUT, d_OUTPUT + pyrFrustumCount*universeElementCount, 0);
+	cudaThreadSynchronize();
 	//
+}
+
+void LBVH_Build()
+{
+	//First step: Assign Morton Codes to BVH Nodes
+	LBVH_assign_morton_code();
+	//
+
+	//Second step: Sort the BVH Nodes according to their morton codes...
+	//Use the thrust::sort function...
+	//
+	LBVH_sort_by_code();
+
+	//Prepare and fill the splits list
+	LBVH_compute_split_levels();
+
+
+	//Sort the splits list by level of split
+	LBVH_sort_split_list();
+
+	//First phase of hierarchy construction : Compute hierarchy nodes Primitive Intervals
+	LBVH_build_hierarchy1();
+
+	//Second phase of hierarchy construction : Building children pointers
+	LBVH_build_hierarchy2();
+
+	//Last phase : BVH Refit
+	LBVH_BVH_Refit();
+
+	//LBVH_CheckNodeData();
+
+	LBVH_Cleanup();
 }

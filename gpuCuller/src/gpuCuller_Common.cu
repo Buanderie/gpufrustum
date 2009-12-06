@@ -28,8 +28,6 @@ void __stdcall gculInitialize( int argc, char** argv )
 	cout << "BVH Hierarchy Node Size = " << sizeof(hnode_t) << endl;
 	cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
-	cout << "Device Shared Memory Size per block = " << deviceProp.sharedMemPerBlock << endl;
-	//
 }
 
 void __stdcall gculLoadAABB( unsigned int N, const void* ptr )
@@ -65,38 +63,12 @@ void __stdcall gculSetUniverseAABB( float min_x, float min_y, float min_z, float
 	universeAABB.max.z = max_z;
 }
 
-
-void __stdcall gculBuildLBVH()
+void __stdcall gculBuildHierarchy()
 {
-	//First step: Assign Morton Codes to BVH Nodes
-	LBVH_assign_morton_code();
-	//
-
-	//Second step: Sort the BVH Nodes according to their morton codes...
-	//Use the thrust::sort function...
-	//
-	LBVH_sort_by_code();
-
-	//Prepare and fill the splits list
-	LBVH_compute_split_levels();
-
-
-	//Sort the splits list by level of split
-	LBVH_sort_split_list();
-
-	//First phase of hierarchy construction : Compute hierarchy nodes Primitive Intervals
-	LBVH_build_hierarchy1();
-
-	//Second phase of hierarchy construction : Building children pointers
-	LBVH_build_hierarchy2();
-
-	//Last phase : BVH Refit
-	LBVH_BVH_Refit();
-
-	//LBVH_CheckNodeData();
-
-	LBVH_Cleanup();
-	
+	//choose among different building strategies ?
+	//for now, only one...
+	LBVH_Build();
+	return;
 }
 
 unsigned int __stdcall gculGetHierarchySize()
@@ -109,7 +81,7 @@ void __stdcall gculGetHierarchyInformation( void* data )
 	cudaMemcpy(data, thrust::raw_pointer_cast(d_HIERARCHY), sizeof(hnode_t)*(LBVH_compute_hierachy_mem_size()), cudaMemcpyDeviceToHost);
 }
 
-void __stdcall gculFreeLBVH()
+void __stdcall gculFreeHierarchy()
 {
 	//Release memory used by temporary data
 	//Release original AABB data
@@ -117,13 +89,28 @@ void __stdcall gculFreeLBVH()
 	//Release split list
 	thrust::device_free(d_HIERARCHY);
 	//
+	thrust::device_free(d_OUTPUT);
 	//PROFIT
+}
+
+void __stdcall gculFreeAABB()
+{
+	thrust::device_free(d_AABB);
+}
+
+void __stdcall gculFreeFrustumPlanes()
+{
+	thrust::device_free(d_PYRFRUSTUM);
+}
+
+void __stdcall gculFreeFrustumCorners()
+{
+	thrust::device_free(d_PYRCORNERS);
 }
 
 void __stdcall gculLoadFrustumPlanes( unsigned int N, const void* ptr )
 {
 	//Load Pyramidal Frustum data onto Device (AoS code)
-	cout << "FUCK " << sizeof(pyrfrustum_t) << endl;
 	pyrfrustum_t * pyr_raw_ptr;
     cudaMalloc((void **) &pyr_raw_ptr, N * sizeof(pyrfrustum_t));
 	cudaMemcpy(pyr_raw_ptr, ptr, sizeof(pyrfrustum_t)*N, cudaMemcpyHostToDevice);
