@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 	srand( time( NULL ) );
 
 	int nAABB = 8192;
-	int nFrustum = 100;
+	int nFrustum = 200;
 	visibleFrustum = 0;
 
 	generateRandomAABBs(	nAABB,
