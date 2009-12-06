@@ -1,6 +1,9 @@
 ////////////////////////////////////////////////////////////
 // Headers
 ////////////////////////////////////////////////////////////
+//STD
+#include <time.h>
+
 //STL
 #include <vector>
 #include <iostream>
@@ -77,6 +80,7 @@ float bvhBuildingTime;
 float cullingTime;
 float frameTime;
 float frameRate;
+float cullingOps;
 unsigned int * cullingResult;
 //
 
@@ -138,6 +142,9 @@ void GLFWCALL WindowSizeCB(int width, int height)
     
     // Send the new window size to AntTweakBar
     TwWindowSize(width, height);
+
+	winWidth = width;
+	winHeight = height;
 }
 
 //Set default values for main parameters
@@ -158,7 +165,7 @@ void setDefaultParameters()
 	isCulling = true;
 	//
 	aabbDistribution = CLUSTERS;
-	nAABB = 10000;
+	nAABB = 8192;
 	aabbMinWidth = 1.0f;
 	aabbMaxWidth = 7.0f;
 	aabbMinHeight = 1.0f;
@@ -344,6 +351,8 @@ void TW_CALL RunbuildBVH(void * clientData)
 // Main
 int main(int argc, char** argv ) 
 {
+	srand( time(NULL) );
+
 	//GLFW Stuff
     GLFWvidmode mode;   // GLFW video mode
     TwBar *bar;         // Pointer to a tweak bar
@@ -523,6 +532,7 @@ int main(int argc, char** argv )
     TwAddVarRO(resultBar, "bvhBuildingTime", TW_TYPE_FLOAT, &bvhBuildingTime, "label='BVH building time (ms)'");
 	TwAddVarRO(resultBar, "cullingTime", TW_TYPE_FLOAT, &cullingTime, "label='Culling Time (ms)'");
 	TwAddVarRO(resultBar, "frameRate", TW_TYPE_FLOAT, &frameRate, "label='Frame Rate (FPS)'");
+	TwAddVarRO(resultBar, "cullingOps", TW_TYPE_FLOAT, &cullingOps, "label='Culling Ops (Millions/s).'");
 	//
 
     // Set GLFW event callbacks
@@ -606,6 +616,7 @@ int main(int argc, char** argv )
 			timeBuffer1 = glfwGetTime();
 			processCulling();
 			cullingTime = (glfwGetTime() - timeBuffer1)*1000.0f;
+			cullingOps = (((float)(nAABB*nFrustum))/(cullingTime/1000.0f))/1000000.0f;
 			//
 			//Draw the universe
 			drawUniverse();

@@ -60,6 +60,9 @@ void __stdcall gculGetHierarchyInformation( void* data );
 GPUCULLER_API
 void __stdcall gculGetResults(void* data);
 
+GPUCULLER_API
+void __stdcall gculSaveHierarchyGraph(char* outputFile);
+
 #endif
 
 #ifdef __cplusplus

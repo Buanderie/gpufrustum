@@ -33,7 +33,7 @@
 			/>
 			<Tool
 				Name="CUDA Build Rule"
-				Include="$(NVSDKCOMPUTE_ROOT)\C\common\inc;.\inc;.\ext\thrust;.\kernel"
+				Include="$(NVSDKCOMPUTE_ROOT)\C\common\inc;.\inc;.\ext;.\kernel"
 				Debug="true"
 				Arch="13"
 				Emulation="false"

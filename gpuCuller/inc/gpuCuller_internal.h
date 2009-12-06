@@ -105,4 +105,9 @@ void LBVH_Build();
 //--------- Frustum Culling -------
 void FrustumCulling();
 //---------------------------------
+
+//--------- Utils -----------------
+void DotOutput( char* fileName, hnode_t* h, int sz, int maxDepth );
+//---------------------------------
+
 #endif

@@ -140,3 +140,11 @@ void __stdcall gculGetResults(void* data)
 {
 	cudaMemcpy(data, thrust::raw_pointer_cast(d_OUTPUT), sizeof(unsigned int)*universeElementCount*pyrFrustumCount, cudaMemcpyDeviceToHost);
 }
+
+void __stdcall gculSaveHierarchyGraph(char* outputFile)
+{
+	hnode_t* data = new hnode_t[ LBVH_compute_hierachy_mem_size() ];
+	cudaMemcpy(data, thrust::raw_pointer_cast(d_HIERARCHY), sizeof(hnode_t)*(LBVH_compute_hierachy_mem_size()), cudaMemcpyDeviceToHost);
+	DotOutput( outputFile, data, universeElementCount, bvhDepth );
+	delete data;
+}

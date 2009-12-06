@@ -4,6 +4,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <iostream>
+#include <deque>
+#include <string>
+#include <fstream>
 #include <gpuCuller.h>
 #include "CPrecisionTimer.h"
 
@@ -22,6 +25,7 @@ typedef struct hnode
 	unsigned int ID;
 	unsigned int childrenStart;
 	unsigned int childrenStop;
+	bool visible;
 	aabb_t bbox;
 } hnode_t;
 
@@ -31,20 +35,20 @@ int main(int argc, char** argv)
 
 	CPrecisionTimer timer;
 
-	unsigned int n = atoi(argv[1]);
-	unsigned int d = atoi(argv[2]);
+	unsigned int n = 128;//atoi(argv[1]);
+	unsigned int d = 3;//atoi(argv[2]);
 
 	aabb_t* pol = new aabb_t[n];
 	for( int i = 0; i < n; ++i )
 	{
 		float x = -50 + rand()%100;
-		float y = -50 + rand()%100;
+		float z = -50 + rand()%100;
 		pol[ i ].min_x = x - 5;
-		pol[ i ].min_y = y - 5;
-		pol[ i ].min_z = - 5;
+		pol[ i ].min_y = -5;
+		pol[ i ].min_z = z - 5;
 		pol[ i ].max_x = x + 5;
-		pol[ i ].max_y = y + 5;
-		pol[ i ].max_z = 5;
+		pol[ i ].max_y = 5;
+		pol[ i ].max_z = z + 5;
 	}
 
 	gculInitialize( argc, argv );
@@ -57,7 +61,7 @@ int main(int argc, char** argv)
 	gculLoadAABB( n, (void*)pol );
 	double tmemtrans = timer.Stop();
 	timer.Start();
-	gculBuildLBVH();
+	gculBuildHierarchy();
 	double texec = timer.Stop();
 
 	cout << "Time to load AABB data = " << tmemtrans << endl;
@@ -76,9 +80,12 @@ int main(int argc, char** argv)
 				<< endl;
 	}*/
 	//
-	gculProcessCulling();
+	//
+	//gculProcessCulling();
 
-	system("PAUSE");
+	gculSaveHierarchyGraph("kikoo.dot");
+
+	//system("PAUSE");
 	return 0;
 }
 
