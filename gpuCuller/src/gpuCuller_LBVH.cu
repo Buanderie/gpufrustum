@@ -6,7 +6,7 @@
 #include <gpuCuller_internal.h>
 #include <gpuCuller_LBVH_kernel.cu>
 //Thrust
-#include <thrust/sort.h>
+#include <thrust/sorting/radix_sort.h>
 #include <thrust/functional.h>
 #include <thrust/fill.h>
 #include <thrust/device_vector.h>
@@ -67,6 +67,16 @@ struct hnode_to_ID
     unsigned int operator()(const hnode_t& node)
     {
         return node.ID;
+    }
+};
+
+// extract an primStop from a hnode_t
+struct hnode_to_stopind
+{
+    __host__ __device__
+    unsigned int operator()(const hnode_t& node)
+    {
+        return node.primStop;
     }
 };
 //
@@ -142,7 +152,8 @@ void LBVH_sort_by_code()
     thrust::transform(d_BVHNODE, d_BVHNODE + universeElementCount, codes.begin(), bvhnode_to_mortonCode());
 	
 	// sort by the mortonCodes
-    thrust::sort_by_key(codes.begin(), codes.end(), d_BVHNODE);
+    thrust::sorting::radix_sort_by_key(codes.begin(), codes.end(), d_BVHNODE);
+	codes.clear();
 
 	cudaThreadSynchronize();
 }
@@ -152,6 +163,9 @@ void LBVH_compute_split_levels()
 	//Prepare memory for splits list (size = depth * elementCount)
 	lbvhsplit_t * splitslist_raw_ptr;
 	const unsigned splitListSize = bvhDepth * universeElementCount;
+#ifdef REPORT_MEM_OPS
+	printf("cudaMalloc : SPLITLIST\n");
+#endif
     cudaMalloc((void **) &splitslist_raw_ptr, splitListSize * sizeof(lbvhsplit_t));
 	d_SPLITSLIST = thrust::device_ptr<lbvhsplit_t>(splitslist_raw_ptr);
 
@@ -181,7 +195,7 @@ void LBVH_sort_split_list()
     thrust::transform(d_SPLITSLIST, d_SPLITSLIST + (universeElementCount*bvhDepth), levels.begin(), lbvhsplit_to_level());
 	
 	// sort by the level
-    thrust::sort_by_key(levels.begin(), levels.end(), d_SPLITSLIST);
+    thrust::sorting::radix_sort_by_key(levels.begin(), levels.end(), d_SPLITSLIST);
 
 	cudaThreadSynchronize();
 }
@@ -205,6 +219,9 @@ void LBVH_build_hierarchy1()
 	//
 	unsigned int sz = LBVH_compute_hierachy_mem_size();
 	hnode_t* h_raw_ptr;
+#ifdef REPORT_MEM_OPS
+	printf("cudaMalloc : HIERARCHY\n");
+#endif
 	cudaMalloc((void **) &h_raw_ptr, sz * sizeof(hnode_t));
 	d_HIERARCHY = thrust::device_ptr<hnode_t>(h_raw_ptr);
 
@@ -237,7 +254,7 @@ void LBVH_build_hierarchy2()
     thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), starts.begin(), hnode_to_startind());
 	
 	// sort by the start index
-    thrust::sort_by_key(starts.begin(), starts.end(), d_HIERARCHY);
+    thrust::sorting::radix_sort_by_key(starts.begin(), starts.end(), d_HIERARCHY);
 
 	// Launch the kernel to get the child start pointers... ????
 	cudaDeviceProp deviceProp;
@@ -253,18 +270,21 @@ void LBVH_build_hierarchy2()
 	cudaThreadSynchronize();
 	//
 
-	
+	// strip out the primStop from each hnode
+    thrust::device_vector<unsigned int> stops(sz);
+    thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), stops.begin(), hnode_to_stopind());
+	//sort the shit by primStop...
+	thrust::sorting::radix_sort_by_key(stops.begin(), stops.end(), d_HIERARCHY);
+	ComputeChildrenStop<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
+	cudaThreadSynchronize();
+
 	// strip out the ID from each hnode
     thrust::device_vector<unsigned int> idlol(sz);
     thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), idlol.begin(), hnode_to_ID());
-	//sort the shit by ID...
-	thrust::sort_by_key(idlol.begin(), idlol.end(), d_HIERARCHY);
+	//sort the shit by primStop...
+	thrust::sorting::radix_sort_by_key(idlol.begin(), idlol.end(), d_HIERARCHY);
 	//
-	cudaThreadSynchronize();
-	
-	ComputeChildrenStop<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
-	cudaThreadSynchronize();
-	
+
 	return;
 }
 
@@ -296,14 +316,23 @@ void LBVH_Cleanup()
 {
 	//Release memory used by temporary data
 	//Release original AABB data
+#ifdef REPORT_MEM_OPS
+	printf("cudaFree : AABB\n");
+#endif
 	thrust::device_free(d_AABB);
 	//Release split list
+#ifdef REPORT_MEM_OPS
+	printf("cudaFree : SPLITLIST\n");
+#endif
 	thrust::device_free(d_SPLITSLIST);
 	//
 	//PROFIT
 
 	// As hierarchy is built, prepare memory for culling result
 	unsigned int * dpolbak = 0;
+#ifdef REPORT_MEM_OPS
+	printf("cudaMalloc : OUTPUT\n");
+#endif
 	cudaMalloc((void **) &dpolbak, pyrFrustumCount*universeElementCount*sizeof(unsigned int));
 	d_OUTPUT = thrust::device_ptr<unsigned int>(dpolbak);
 	thrust::fill(d_OUTPUT, d_OUTPUT + pyrFrustumCount*universeElementCount, 0);
@@ -313,6 +342,7 @@ void LBVH_Cleanup()
 
 void LBVH_Build()
 {
+
 	//First step: Assign Morton Codes to BVH Nodes
 	LBVH_assign_morton_code();
 	//

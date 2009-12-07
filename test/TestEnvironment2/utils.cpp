@@ -1,3 +1,4 @@
+#include <math.h>
 #include "utils.h"
 
 float randf()
@@ -35,6 +36,108 @@ void generateRandomPyrFrustums( int n,
 	}
 }
 
+void generateClusteredPyrFrustums( int n,
+								float minFOV, float maxFOV,
+								float minNear, float maxNear,
+								float minFar, float maxFar,
+								float minAspectRatio, float maxAspectRatio,
+								float minPosX, float maxPosX,
+								float minPosY, float maxPosY,
+								float minPosZ, float maxPosZ,
+								float minRotX, float maxRotX,
+								float minRotY, float maxRotY,
+								float minRotZ, float maxRotZ,
+								std::vector<glPyramidalFrustum>& list )
+{
+	int clusterSize = 20;
+	int clusterPop = 0;
+	int tmpN = n;
+
+	float clusterWidth = ((minNear+maxNear)/(minFar+maxFar)/2.0f)*clusterSize/6;
+	float clusterHeight = (minAspectRatio*maxAspectRatio)*clusterWidth*clusterSize/6;
+	float clusterDepth = ((minNear+maxNear)/2.0f)*clusterSize/6;
+
+	while( 1 )
+	{
+		if( tmpN < 0 )
+			return;
+
+		if( tmpN >= clusterSize )
+			clusterPop = clusterSize;
+		else
+			clusterPop = tmpN;
+
+		float PosX = minPosX + randf()*( maxPosX - minPosX );
+		float PosY = minPosY + randf()*( maxPosY - minPosY );
+		float PosZ = minPosZ + randf()*( maxPosZ - minPosZ );
+		float clusterMinX = PosX - clusterWidth/2;
+		float clusterMinY = PosY - clusterDepth/2;
+		float clusterMinZ = PosZ - clusterHeight/2;
+		float clusterMaxX = PosX + clusterWidth/2;
+		float clusterMaxY = PosY + clusterDepth/2;
+		float clusterMaxZ = PosZ + clusterHeight/2;
+
+		generateRandomPyrFrustums(	clusterPop,
+									minFOV, maxFOV,
+									minNear, maxNear,
+									minFar, maxFar,
+									minAspectRatio, maxAspectRatio,
+									clusterMinX, clusterMaxX,
+									clusterMinY, clusterMaxY, 
+									clusterMinZ, clusterMaxZ,
+									minRotX, maxRotX,
+									minRotY, maxRotY,
+									minRotZ, maxRotZ,
+									list);
+		tmpN -= clusterSize;
+	}
+}
+
+void generateMixedPyrFrustums( int n,
+								float minFOV, float maxFOV,
+								float minNear, float maxNear,
+								float minFar, float maxFar,
+								float minAspectRatio, float maxAspectRatio,
+								float minPosX, float maxPosX,
+								float minPosY, float maxPosY,
+								float minPosZ, float maxPosZ,
+								float minRotX, float maxRotX,
+								float minRotY, float maxRotY,
+								float minRotZ, float maxRotZ,
+								std::vector<glPyramidalFrustum>& list )
+{
+	int mid1 = (int)ceilf(3.0f*(float)n/4.0f);
+	int mid2 = (int)ceilf((float)n/4.0f);
+	while( mid1 + mid2 != n )
+		mid2--;
+
+	generateRandomPyrFrustums(	mid1,
+							minFOV, maxFOV,
+							minNear, maxNear,
+							minFar, maxFar,
+							minAspectRatio, maxAspectRatio,
+							minPosX, maxPosX,
+							minPosY, maxPosY, 
+							minPosZ, maxPosZ,
+							minRotX, maxRotX,
+							minRotY, maxRotY,
+							minRotZ, maxRotZ,
+							list);
+
+	generateRandomPyrFrustums(	mid2,
+								minFOV, maxFOV,
+								minNear, maxNear,
+								minFar, maxFar,
+								minAspectRatio, maxAspectRatio,
+								minPosX, maxPosX,
+								minPosY, maxPosY, 
+								minPosZ, maxPosZ,
+								minRotX, maxRotX,
+								minRotY, maxRotY,
+								minRotZ, maxRotZ,
+								list);
+}
+
 void generateRandomAABBs(	int n,
 							float minWidth, float maxWidth,
 							float minHeight, float maxHeight,
@@ -69,13 +172,22 @@ void generateClusteredAABBs(	int n,
 							)
 {
 	int clusterSize = 20;
-	int nbClusters = n/clusterSize;
+	int clusterPop = 0;
+	int tmpN = n;
 	float clusterWidth = ((minWidth+maxWidth)/2.0f)*clusterSize/6;
 	float clusterHeight = ((minHeight+maxHeight)/2.0f)*clusterSize/6;
 	float clusterDepth = ((minDepth+maxDepth)/2.0f)*clusterSize/6;
 
-	for( int i = 0; i < nbClusters; ++i )
+	while( 1 )
 	{
+		if( tmpN < 0 )
+			return;
+
+		if( tmpN >= clusterSize )
+			clusterPop = clusterSize;
+		else
+			clusterPop = tmpN;
+
 		float PosX = minPosX + randf()*( maxPosX - minPosX );
 		float PosY = minPosY + randf()*( maxPosY - minPosY );
 		float PosZ = minPosZ + randf()*( maxPosZ - minPosZ );
@@ -86,7 +198,7 @@ void generateClusteredAABBs(	int n,
 		float clusterMaxY = PosY + clusterDepth/2;
 		float clusterMaxZ = PosZ + clusterHeight/2;
 
-		generateRandomAABBs(	clusterSize,
+		generateRandomAABBs(	clusterPop,
 								minWidth,
 								maxWidth,
 								minHeight,
@@ -100,6 +212,7 @@ void generateClusteredAABBs(	int n,
 								clusterMinZ,
 								clusterMaxZ,
 								list);
+		tmpN -= clusterSize;
 	}
 }
 
@@ -113,8 +226,10 @@ void generateMixedAABBs(		int n,
 								std::vector<glAABB>& list
 						)
 {
-	int mid1 = 3*n/4;
-	int mid2 = n/4;
+	int mid1 = (int)ceilf(3.0f*(float)n/4.0f);
+	int mid2 = (int)ceilf((float)n/4.0f);
+	while( mid1 + mid2 != n )
+		mid2--;
 
 	//Generate half clustered
 	{

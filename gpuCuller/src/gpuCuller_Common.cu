@@ -34,6 +34,10 @@ void __stdcall gculLoadAABB( unsigned int N, const void* ptr )
 {
 	//Load AABB data onto Device (AoS code)
 	aabb_t * aabb_raw_ptr;
+
+#ifdef REPORT_MEM_OPS
+	printf("cudaMalloc : AABB\n");
+#endif
     cudaMalloc((void **) &aabb_raw_ptr, N * sizeof(aabb_t));
 	cudaMemcpy(aabb_raw_ptr, ptr, sizeof(aabb_t)*N, cudaMemcpyHostToDevice);
 	d_AABB = thrust::device_ptr<aabb_t>(aabb_raw_ptr);
@@ -41,6 +45,10 @@ void __stdcall gculLoadAABB( unsigned int N, const void* ptr )
 
 	//Prepare memory for BVH Nodes (AoS code)
 	bvhnode_t * bvhnode_raw_ptr; 
+
+#ifdef REPORT_MEM_OPS
+	printf("cudaMalloc : BVHNODE\n");
+#endif
 	cudaMalloc((void **) &bvhnode_raw_ptr, N * sizeof(bvhnode_t));
 	d_BVHNODE = thrust::device_ptr<bvhnode_t>(bvhnode_raw_ptr);	
 
@@ -85,26 +93,44 @@ void __stdcall gculFreeHierarchy()
 {
 	//Release memory used by temporary data
 	//Release original AABB data
+#ifdef REPORT_MEM_OPS
+	printf("cudaFree : BVHNODE\n");
+#endif
 	thrust::device_free(d_BVHNODE);
 	//Release split list
+#ifdef REPORT_MEM_OPS
+	printf("cudaFree : HIERARCHY\n");
+#endif
 	thrust::device_free(d_HIERARCHY);
 	//
+#ifdef REPORT_MEM_OPS
+	printf("cudaFREE : OUTPUT\n");
+#endif
 	thrust::device_free(d_OUTPUT);
 	//PROFIT
 }
 
 void __stdcall gculFreeAABB()
 {
+#ifdef REPORT_MEM_OPS
+	printf("cudaFree : AABB\n");
+#endif
 	thrust::device_free(d_AABB);
 }
 
 void __stdcall gculFreeFrustumPlanes()
 {
+#ifdef REPORT_MEM_OPS
+	printf("cudaFree : PYRFRUSTUM\n");
+#endif
 	thrust::device_free(d_PYRFRUSTUM);
 }
 
 void __stdcall gculFreeFrustumCorners()
 {
+#ifdef REPORT_MEM_OPS
+	printf("cudaFree : PYRCORNERS\n");
+#endif
 	thrust::device_free(d_PYRCORNERS);
 }
 
@@ -112,6 +138,9 @@ void __stdcall gculLoadFrustumPlanes( unsigned int N, const void* ptr )
 {
 	//Load Pyramidal Frustum data onto Device (AoS code)
 	pyrfrustum_t * pyr_raw_ptr;
+#ifdef REPORT_MEM_OPS
+	printf("cudaMalloc : PYRFRUSTUM\n");
+#endif
     cudaMalloc((void **) &pyr_raw_ptr, N * sizeof(pyrfrustum_t));
 	cudaMemcpy(pyr_raw_ptr, ptr, sizeof(pyrfrustum_t)*N, cudaMemcpyHostToDevice);
 	d_PYRFRUSTUM = thrust::device_ptr<pyrfrustum_t>(pyr_raw_ptr);
@@ -123,6 +152,9 @@ void __stdcall gculLoadFrustumCorners( unsigned int N, const void* ptr )
 {
 	//Load Pyramidal Frustum data onto Device (AoS code)
 	pyrcorners_t * pyr_raw_ptr;
+#ifdef REPORT_MEM_OPS
+	printf("cudaMalloc : PYRCORNERS\n");
+#endif
     cudaMalloc((void **) &pyr_raw_ptr, N * sizeof(pyrcorners_t));
 	cudaMemcpy(pyr_raw_ptr, ptr, sizeof(pyrcorners_t)*N, cudaMemcpyHostToDevice);
 	d_PYRCORNERS = thrust::device_ptr<pyrcorners_t>(pyr_raw_ptr);

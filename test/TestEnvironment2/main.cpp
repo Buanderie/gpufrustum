@@ -160,12 +160,12 @@ void setDefaultParameters()
 	//
 	cullingResult = 0;
 	//
-	bvhDepth = 5;
+	bvhDepth = 4;
 	dynamicMode = false;
-	isCulling = true;
+	isCulling = false;
 	//
 	aabbDistribution = CLUSTERS;
-	nAABB = 8192;
+	nAABB = 512;
 	aabbMinWidth = 1.0f;
 	aabbMaxWidth = 7.0f;
 	aabbMinHeight = 1.0f;
@@ -255,6 +255,34 @@ void createFrustum( distrib_t frustumDistrib )
 								fMinRotZ, fMaxRotZ,
 								frustumList );
 	break;
+	case CLUSTERS:
+		generateClusteredPyrFrustums(	nFrustum,
+									fMinFOV, fMaxFOV,
+									fMinNear, fMaxNear,
+									fMinFar, fMaxFar,
+									fMinAspectRatio, fMaxAspectRatio,
+									universeMinX + 1.0f, universeMaxX - 1.0f,
+									universeMinY + 1.0f, universeMaxY - 1.0f,
+									universeMinZ + 1.0f, universeMaxZ - 1.0f,
+									fMinRotX, fMaxRotX,
+									fMinRotY, fMaxRotY,
+									fMinRotZ, fMaxRotZ,
+									frustumList );
+	break;
+	case MIX:
+		generateMixedPyrFrustums(	nFrustum,
+								fMinFOV, fMaxFOV,
+								fMinNear, fMaxNear,
+								fMinFar, fMaxFar,
+								fMinAspectRatio, fMaxAspectRatio,
+								universeMinX + 1.0f, universeMaxX - 1.0f,
+								universeMinY + 1.0f, universeMaxY - 1.0f,
+								universeMinZ + 1.0f, universeMaxZ - 1.0f,
+								fMinRotX, fMaxRotX,
+								fMinRotY, fMaxRotY,
+								fMinRotZ, fMaxRotZ,
+								frustumList );
+	break;
 	}
 }
 
@@ -291,6 +319,7 @@ void buildBVH()
 	float timeBuffer = glfwGetTime();
 	gculBuildHierarchy();
 	bvhBuildingTime = (glfwGetTime() - timeBuffer)*1000.0f;
+	//gculSaveHierarchyGraph("kikoo.dot");
 	//
 
 	//Delete CPU data

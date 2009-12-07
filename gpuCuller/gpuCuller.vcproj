@@ -37,8 +37,9 @@
 				Debug="true"
 				Arch="13"
 				Emulation="false"
-				Optimization="0"
-				RuntimeChecks="1"
+				FastMath="true"
+				Optimization="2"
+				RuntimeChecks="0"
 				TypeInfo="true"
 			/>
 			<Tool

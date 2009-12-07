@@ -3,6 +3,11 @@
 
 #include <thrust/device_ptr.h>
 
+//-------- Macros & Defines -------
+#define REPORT_FAILURE(__DEATH_MESSAGE__) printf("%s.%d : FAILURE : %s\n", __FILE__, __LINE__, __DEATH_MESSAGE__);exit(-1);
+#define REPORT_MEM_OPS
+//---------------------------------
+
 //-------- Data structures --------
 //3D Vector
 typedef struct vec3{

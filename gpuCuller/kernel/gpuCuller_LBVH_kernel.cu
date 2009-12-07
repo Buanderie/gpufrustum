@@ -172,22 +172,23 @@ __global__ void ComputeHNodeIntervals( lbvhsplit_t* split, hnode_t* hierarchy, u
 	else
 	{
 		//Discard the node
-		hierarchy[ i ].ID = 99999999;
+		/*hierarchy[ i ].ID = 99999999;
 		hierarchy[ i ].primStart = 99999999;
 		hierarchy[ i ].primStop = 99999999;
 		hierarchy[ i ].splitLevel = 99999999;
+		*/
 	}
 
 	//Last check...
 	//If the lower primitive bound is greater than or equal to the upper bound
 	//we discard the node (~ ID = 99999999 and primStart=99999999 and primStop=99999999)
-	if( hierarchy[ i ].primStart > hierarchy[ i ].primStop )
+	/*if( hierarchy[ i ].primStart > hierarchy[ i ].primStop )
 	{
 		hierarchy[ i ].ID = 99999999;
 		hierarchy[ i ].primStart = 99999999;
 		hierarchy[ i ].primStop = 99999999;
 		hierarchy[ i ].splitLevel = 99999999;
-	}
+	}*/
 
 	return;
 }
@@ -197,8 +198,6 @@ __global__ void ComputeChildrenStart( hnode_t* h, unsigned int elementCount, uns
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	if( i >= hierarchySize )
 		return;
-
-	h[ i ].visible = false;
 
 	if( h[ i ].splitLevel >= maxDepth )
 	{
@@ -227,15 +226,13 @@ __global__ void ComputeChildrenStop( hnode_t* h, unsigned int elementCount, unsi
 		return;
 	}
 
-	if( h[ i ]. splitLevel == h[ i + 1 ]. splitLevel )
+	if( h[ i ].splitLevel+1 == h[ i + 1 ].splitLevel )
 	{
-		if( h[i+1].childrenStart <= hierarchySize )
-			h[i].childrenStop = h[i+1].childrenStart-1;
-		else
-			h[i].childrenStop = h[i].childrenStart;
+		h[i].childrenStop = h[ i + 1 ].ID;
 	}
-	else
-		h[i].childrenStop = h[i].childrenStart+3;
+
+	if( h[i].childrenStart > elementCount )
+		h[i].childrenStart = h[i].childrenStop;
 }
 
 __global__ void ComputeBVHRefit( hnode_t* h, bvhnode_t* prim, unsigned int elementCount, unsigned hierarchySize, unsigned int l, unsigned int maxDepth )
@@ -245,6 +242,9 @@ __global__ void ComputeBVHRefit( hnode_t* h, bvhnode_t* prim, unsigned int eleme
 		return;
 
 	if( h[i].splitLevel > maxDepth )
+		return;
+
+	if( h[i].splitLevel < maxDepth && (h[i].childrenStart > hierarchySize || h[i].childrenStop > hierarchySize) )
 		return;
 
 	if( h[i].splitLevel == l )
