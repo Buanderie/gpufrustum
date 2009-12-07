@@ -125,6 +125,7 @@ float aabbMaxDepth;
 
 //BVH parameters
 bool isCulling;
+bool isRendering;
 bool dynamicMode;
 unsigned int bvhDepth;
 //
@@ -148,7 +149,7 @@ void GLFWCALL WindowSizeCB(int width, int height)
 }
 
 //Set default values for main parameters
-void setDefaultParameters()
+void setDefaultParameters(char** arg)
 {
 	//universe
 	universeMinX = -300;
@@ -160,12 +161,13 @@ void setDefaultParameters()
 	//
 	cullingResult = 0;
 	//
-	bvhDepth = 4;
+	bvhDepth = 5;
 	dynamicMode = false;
-	isCulling = false;
+	isCulling = true;
+	isRendering = false;
 	//
-	aabbDistribution = CLUSTERS;
-	nAABB = 512;
+	aabbDistribution = UNIFORM;
+	nAABB = 10000;
 	aabbMinWidth = 1.0f;
 	aabbMaxWidth = 7.0f;
 	aabbMinHeight = 1.0f;
@@ -346,9 +348,6 @@ void processCulling()
 
 void drawUniverse()
 {
-	//if( frustumList.size() != nFrustum || aabbList.size() != nAABB )
-	//	return;
-
 	for( int j = 0; j < frustumList.size(); ++j )
 	{
 		for( int i = 0; i < aabbList.size(); ++i )
@@ -375,6 +374,12 @@ void TW_CALL RunbuildBVH(void * clientData)
 	gculFreeFrustumPlanes();
 	gculFreeFrustumCorners();
 	buildBVH();
+}
+
+//SAVE DOT FILE CALLBACK
+void TW_CALL GenerateDOTFile(void * clientData )
+{
+	gculSaveHierarchyGraph("hierarchy.dot");
 }
 
 // Main
@@ -450,7 +455,7 @@ int main(int argc, char** argv )
         return 1;
     }
 
-	setDefaultParameters();
+	setDefaultParameters(argv);
 
     // Create a tweak bar
     bar = TwNewBar("mybar");
@@ -547,12 +552,17 @@ int main(int argc, char** argv )
 	//Adding a button to build Hierarchy
 	TwAddButton(bar, "Rebuild", RunbuildBVH, NULL, "group='Hierarchy' label='Rebuild Universe' ");
 
+	//Adding a button to build Hierarchy
+	TwAddButton(bar, "DOTDOT", GenerateDOTFile, NULL, "group='Hierarchy' label='Generate DOT file' ");
+
 	// Add 'nAABB' to 'bar': it is a modifable variable of type TW_TYPE_UINT32
     TwAddVarRW(bar, "dynamicMode", TW_TYPE_BOOLCPP, &dynamicMode, "group='Hierarchy' label='Dynamic Mode (rebuild every frame)'");
 
 	// Add 'nAABB' to 'bar': it is a modifable variable of type TW_TYPE_UINT32
     TwAddVarRW(bar, "isCulling", TW_TYPE_BOOLCPP, &isCulling, "group='Hierarchy' label='Culling Active'");
 
+	// Add 'nAABB' to 'bar': it is a modifable variable of type TW_TYPE_UINT32
+    TwAddVarRW(bar, "isRendering", TW_TYPE_BOOLCPP, &isRendering, "group='Graphics' label='Rendering Active'");
 
 	//ANT TWEAK BAR FOR RESULT DISPLAY
 	resultBar = TwNewBar("resultBar");
@@ -645,10 +655,12 @@ int main(int argc, char** argv )
 			timeBuffer1 = glfwGetTime();
 			processCulling();
 			cullingTime = (glfwGetTime() - timeBuffer1)*1000.0f;
-			cullingOps = (((float)(nAABB*nFrustum))/(cullingTime/1000.0f))/1000000.0f;
+			cout << cullingTime << endl;
+			cullingOps = (((float)(nFrustum))/(cullingTime/1000.0f))/1000000.0f;
 			//
 			//Draw the universe
-			drawUniverse();
+			if( isRendering )
+				drawUniverse();
 		}
 
         // Draw tweak bars

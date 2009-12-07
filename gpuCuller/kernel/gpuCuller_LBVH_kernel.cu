@@ -205,10 +205,13 @@ __global__ void ComputeChildrenStart( hnode_t* h, unsigned int elementCount, uns
 		return;
 	}
 
-	if( h[ i+1 ].splitLevel == h[ i ].splitLevel + 1 )
-	{	
-		h[ i ].childrenStart = h[ i+1 ].ID;
-		return;
+	for( int k = i+1; i < hierarchySize; ++k )
+	{
+		if( h[ k ].splitLevel == h[ i ].splitLevel + 1 )
+		{	
+			h[ i ].childrenStart = h[ k ].ID;
+			break;
+		}
 	}
 
 	return;
@@ -226,9 +229,17 @@ __global__ void ComputeChildrenStop( hnode_t* h, unsigned int elementCount, unsi
 		return;
 	}
 
-	if( h[ i ].splitLevel+1 == h[ i + 1 ].splitLevel )
+	for( int k = i+1; k < hierarchySize; ++k )
+	if( h[ i ].splitLevel+1 == h[ k ].splitLevel )
 	{
-		h[i].childrenStop = h[ i + 1 ].ID;
+		/*if( h[k].primStop > h[i].primStop )
+		{
+			h[i].childrenStop = h[i].childrenStart;
+			break;
+		}*/
+
+		h[i].childrenStop = h[ k ].ID;
+		break;
 	}
 
 	if( h[i].childrenStart > elementCount )

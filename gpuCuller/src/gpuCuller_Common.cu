@@ -13,8 +13,8 @@ void __stdcall gculInitialize( int argc, char** argv )
 	int major = THRUST_MAJOR_VERSION;
     int minor = THRUST_MINOR_VERSION;
     int subminor = THRUST_SUBMINOR_VERSION;
-	cout << "Initializing gpuCuller..." << endl;
-	std::cout << "Using Thrust v" << major << "." << minor << "." << subminor << std::endl;
+	//cout << "Initializing gpuCuller..." << endl;
+	//std::cout << "Using Thrust v" << major << "." << minor << "." << subminor << std::endl;
 
 	printf("Initializing CUDA...\n");
 	// Initializes CUDA device
@@ -22,12 +22,7 @@ void __stdcall gculInitialize( int argc, char** argv )
 		cutilDeviceInit(argc, argv);
 	else
 		cudaSetDevice( cutGetMaxGflopsDeviceId() );
-	printf("CUDA Initialized, using device #%i\n", cutGetMaxGflopsDeviceId());
-	
-	//Memory information
-	cout << "BVH Hierarchy Node Size = " << sizeof(hnode_t) << endl;
-	cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, 0);
+	//printf("CUDA Initialized, using device #%i\n", cutGetMaxGflopsDeviceId());
 }
 
 void __stdcall gculLoadAABB( unsigned int N, const void* ptr )
@@ -108,6 +103,18 @@ void __stdcall gculFreeHierarchy()
 #endif
 	thrust::device_free(d_OUTPUT);
 	//PROFIT
+
+	thrust::device_free( trav_hnodeSplitLevel );
+	thrust::device_free( trav_hnodePrimStart );
+	thrust::device_free( trav_hnodePrimStop );
+	thrust::device_free( trav_hnodeID );
+	thrust::device_free( trav_hnodeChildrenStart );
+	thrust::device_free( trav_hnodeChildrenStop );
+	thrust::device_free( trav_hnodeAABBMin );
+	thrust::device_free( trav_hnodeAABBMax );
+	thrust::device_free( trav_primIndex );
+	thrust::device_free( trav_primAABBMin );
+	thrust::device_free( trav_primAABBMax );
 }
 
 void __stdcall gculFreeAABB()
@@ -164,6 +171,7 @@ void __stdcall gculLoadFrustumCorners( unsigned int N, const void* ptr )
 
 void __stdcall gculProcessCulling()
 {
+	//TexTest();
 	FrustumCulling();
 	return;
 }

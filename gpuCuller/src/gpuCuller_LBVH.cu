@@ -56,7 +56,7 @@ struct hnode_to_startind
     __host__ __device__
     unsigned int operator()(const hnode_t& node)
     {
-        return node.primStart;
+        return node.primStart+node.splitLevel;
     }
 };
 
@@ -237,8 +237,6 @@ void LBVH_build_hierarchy1()
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
 
-	cout << "Hierarchy Size = " << sz << endl;
-
 	ComputeHNodeIntervals<<< grid, threads >>>(	splitslist_raw_ptr, h_raw_ptr, universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
 
@@ -265,16 +263,16 @@ void LBVH_build_hierarchy2()
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
 
-	cout << "POL = " << gridDim << " BAK = " << maxBlockDim << endl;
 	ComputeChildrenStart<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
 	//
-
+	
 	// strip out the primStop from each hnode
     thrust::device_vector<unsigned int> stops(sz);
     thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), stops.begin(), hnode_to_stopind());
 	//sort the shit by primStop...
 	thrust::sorting::radix_sort_by_key(stops.begin(), stops.end(), d_HIERARCHY);
+	
 	ComputeChildrenStop<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
 
@@ -326,7 +324,6 @@ void LBVH_Cleanup()
 #endif
 	thrust::device_free(d_SPLITSLIST);
 	//
-	//PROFIT
 
 	// As hierarchy is built, prepare memory for culling result
 	unsigned int * dpolbak = 0;
@@ -368,7 +365,10 @@ void LBVH_Build()
 	//Last phase : BVH Refit
 	LBVH_BVH_Refit();
 
+	PrepareTraversalTextures();
+	
 	//LBVH_CheckNodeData();
+	//TexTest();
 
 	LBVH_Cleanup();
 }

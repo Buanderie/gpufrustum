@@ -5,7 +5,7 @@
 
 //-------- Macros & Defines -------
 #define REPORT_FAILURE(__DEATH_MESSAGE__) printf("%s.%d : FAILURE : %s\n", __FILE__, __LINE__, __DEATH_MESSAGE__);exit(-1);
-#define REPORT_MEM_OPS
+//#define REPORT_MEM_OPS
 //---------------------------------
 
 //-------- Data structures --------
@@ -90,8 +90,21 @@ extern unsigned int universeElementCount;
 extern unsigned int bvhDepth;
 extern unsigned int pyrFrustumCount;
 extern aabb_t universeAABB;
-texture<hnode_t, 1, cudaReadModeElementType> texHIERARCHY;
 //---------------------------------
+
+//Data references for traversal
+extern thrust::device_ptr<unsigned int> trav_hnodeSplitLevel;
+extern thrust::device_ptr<unsigned int> trav_hnodePrimStart;
+extern thrust::device_ptr<unsigned int> trav_hnodePrimStop;
+extern thrust::device_ptr<unsigned int> trav_hnodeID;
+extern thrust::device_ptr<unsigned int> trav_hnodeChildrenStart;
+extern thrust::device_ptr<unsigned int> trav_hnodeChildrenStop;
+extern thrust::device_ptr<float4> trav_hnodeAABBMin;
+extern thrust::device_ptr<float4> trav_hnodeAABBMax;
+extern thrust::device_ptr<unsigned int> trav_primIndex;
+extern thrust::device_ptr<float4> trav_primAABBMin;
+extern thrust::device_ptr<float4> trav_primAABBMax;
+//
 
 //-------- LBVH Code --------------
 void LBVH_assign_morton_code();
@@ -108,7 +121,9 @@ void LBVH_Build();
 //---------------------------------
 
 //--------- Frustum Culling -------
+void PrepareTraversalTextures();
 void FrustumCulling();
+void TexTest();
 //---------------------------------
 
 //--------- Utils -----------------

@@ -15,3 +15,17 @@ unsigned int pyrFrustumCount;
 unsigned int bvhDepth;
 aabb_t universeAABB;
 //---------------------------------
+
+//Traversal Data References
+thrust::device_ptr<unsigned int> trav_hnodeSplitLevel;
+thrust::device_ptr<unsigned int> trav_hnodePrimStart;
+thrust::device_ptr<unsigned int> trav_hnodePrimStop;
+thrust::device_ptr<unsigned int> trav_hnodeID;
+thrust::device_ptr<unsigned int> trav_hnodeChildrenStart;
+thrust::device_ptr<unsigned int> trav_hnodeChildrenStop;
+thrust::device_ptr<float4> trav_hnodeAABBMin;
+thrust::device_ptr<float4> trav_hnodeAABBMax;
+thrust::device_ptr<unsigned int> trav_primIndex;
+thrust::device_ptr<float4> trav_primAABBMin;
+thrust::device_ptr<float4> trav_primAABBMax;
+//
