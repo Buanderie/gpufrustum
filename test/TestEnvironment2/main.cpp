@@ -81,7 +81,7 @@ float cullingTime;
 float frameTime;
 float frameRate;
 float cullingOps;
-unsigned int * cullingResult;
+char * cullingResult;
 //
 
 //universe parameters
@@ -91,6 +91,7 @@ float universeMinZ;
 float universeMaxX;
 float universeMaxY;
 float universeMaxZ;
+float universeSurface;
 //
 
 //frustum parameters
@@ -110,6 +111,8 @@ float fMinRotY;
 float fMaxRotY;
 float fMinRotZ;
 float fMaxRotZ;
+int nPrimPerFrustum;
+float frustumSurface;
 //
 
 //aabb parameters
@@ -121,6 +124,8 @@ float aabbMinHeight;
 float aabbMaxHeight;
 float aabbMinDepth;
 float aabbMaxDepth;
+float primDensity;
+float primSurface;
 //
 
 //BVH parameters
@@ -152,12 +157,14 @@ void GLFWCALL WindowSizeCB(int width, int height)
 void setDefaultParameters(char** arg)
 {
 	//universe
-	universeMinX = -300;
+	//float shift = sqrt( nFrustum * frustumSurface ) / 2.0f;
+	universeMinX = -200;
 	universeMinY = -10;
-	universeMinZ = -300;
-	universeMaxX = 300;
+	universeMinZ = -200;
+	universeMaxX = 200;
 	universeMaxY = 10;
-	universeMaxZ = 300;
+	universeMaxZ = 200;
+	universeSurface = fabs( universeMinX - universeMaxX ) * fabs( universeMinZ - universeMaxZ );
 	//
 	cullingResult = 0;
 	//
@@ -166,14 +173,16 @@ void setDefaultParameters(char** arg)
 	isCulling = true;
 	isRendering = false;
 	//
-	aabbDistribution = UNIFORM;
-	nAABB = 10000;
+	aabbDistribution = MIX;
+	nAABB = 2500;
 	aabbMinWidth = 1.0f;
 	aabbMaxWidth = 7.0f;
 	aabbMinHeight = 1.0f;
 	aabbMaxHeight = 7.0f;
 	aabbMinDepth = 1.0f;
 	aabbMaxDepth = 7.0f;
+	primSurface = fabs( aabbMinWidth - aabbMaxWidth ) * fabs( aabbMinHeight - aabbMaxHeight );
+	primDensity = (float)nAABB * primSurface / universeSurface;
 	//
 	frustumDistribution = UNIFORM;
 	nFrustum = 100;
@@ -191,7 +200,11 @@ void setDefaultParameters(char** arg)
 	fMaxRotY = 180;
 	fMinRotZ = 0;
 	fMaxRotZ = 0;
+	frustumSurface = (fabs(fabs(fMinNear-fMaxNear) - fabs(fMinFar-fMaxFar))/2)*3.1415f;
 	//
+
+	//Therefore to achieve 10 entity per frustum (mean value)
+	//nAABB = (unsigned int)ceil( (float)nFrustum * frustumSurface / primSurface);
 }
 
 //Function which creates AABB distribution
@@ -321,7 +334,6 @@ void buildBVH()
 	float timeBuffer = glfwGetTime();
 	gculBuildHierarchy();
 	bvhBuildingTime = (glfwGetTime() - timeBuffer)*1000.0f;
-	//gculSaveHierarchyGraph("kikoo.dot");
 	//
 
 	//Delete CPU data
@@ -341,29 +353,35 @@ void processCulling()
 	if( cullingResult != 0 )
 		delete cullingResult;
 
-	cullingResult = new unsigned int[ nAABB * nFrustum ];
+	cullingResult = new char[ nAABB * nFrustum ];
 	gculProcessCulling();
 	gculGetResults(cullingResult);
 }
 
 void drawUniverse()
 {
+	int nbCulled = 0;
 	for( int j = 0; j < frustumList.size(); ++j )
 	{
 		for( int i = 0; i < aabbList.size(); ++i )
 		{
-			if( cullingResult[j*nAABB + i] == 7777777 )
+			if( cullingResult[j*nAABB + i] == 1 )
 			{
 				aabbList[i].isInsideFrustum = true;
+				nbCulled++;
 			}
 		}
-		frustumList[j].draw();
+		//if( isRendering )
+		//frustumList[j].draw();
 	}
 
+	if( isRendering )
 	for( int i = 0; i < aabbList.size(); ++i )
 	{
 		aabbList[i].draw();
 	}
+
+	nPrimPerFrustum = nbCulled / nFrustum;
 }
 
 //RE-BUILD BUTTON CALLBACK
@@ -460,7 +478,7 @@ int main(int argc, char** argv )
     // Create a tweak bar
     bar = TwNewBar("mybar");
     TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLFW and OpenGL.' "); // Message added to the help bar.
-	TwDefine(" mybar size='240 500' label='Settings'");
+	TwDefine(" mybar size='240 650' label='Settings'");
 
     // Add 'bgColor' to 'bar': it is a modifable variable of type TW_TYPE_COLOR3F (3 floats color)
     TwAddVarRW(bar, "bgColor", TW_TYPE_COLOR3F, &bgColor, "group='Graphics' label='Background color' ");
@@ -505,7 +523,7 @@ int main(int argc, char** argv )
     TwAddVarRW(bar, "aabbMaxDepth", TW_TYPE_FLOAT, &aabbMaxDepth, "group='Primitives' max=1000 label='AABB min. width'");
 
 	// Add 'nAABB' to 'bar': it is a modifable variable of type TW_TYPE_UINT32
-    TwAddVarRW(bar, "nFrustum", TW_TYPE_UINT32, &nFrustum, "group='Frustum' max=10000 step=10 label='Number of Frustum'");
+    TwAddVarRW(bar, "nFrustum", TW_TYPE_UINT32, &nFrustum, "group='Frustum' max=50000 step=10 label='Number of Frustum'");
 
 	// Add 'nAABB' to 'bar': it is a modifable variable of type TW_TYPE_UINT32
     TwAddVarRW(bar, "fMinFOV", TW_TYPE_FLOAT, &fMinFOV, "group='Frustum' max=360 label='Frustum min. FOV'");
@@ -567,11 +585,13 @@ int main(int argc, char** argv )
 	//ANT TWEAK BAR FOR RESULT DISPLAY
 	resultBar = TwNewBar("resultBar");
     TwDefine(" GLOBAL help='This example shows how to integrate AntTweakBar with GLFW and OpenGL.' "); // Message added to the help bar.
-	TwDefine(" mybar size='240 500' label='Results'");
+	TwDefine(" resultBar size='300 200' label='Results'");
     TwAddVarRO(resultBar, "bvhBuildingTime", TW_TYPE_FLOAT, &bvhBuildingTime, "label='BVH building time (ms)'");
 	TwAddVarRO(resultBar, "cullingTime", TW_TYPE_FLOAT, &cullingTime, "label='Culling Time (ms)'");
 	TwAddVarRO(resultBar, "frameRate", TW_TYPE_FLOAT, &frameRate, "label='Frame Rate (FPS)'");
 	TwAddVarRO(resultBar, "cullingOps", TW_TYPE_FLOAT, &cullingOps, "label='Culling Ops (Millions/s).'");
+	TwAddVarRO(resultBar, "primDensity", TW_TYPE_FLOAT, &primDensity, "label='Primitive Density'");
+	TwAddVarRO(resultBar, "nPrimPerFrustum", TW_TYPE_INT32, &nPrimPerFrustum, "label='Mean Primitives per Frustum'");
 	//
 
     // Set GLFW event callbacks
@@ -601,6 +621,10 @@ int main(int argc, char** argv )
 	//Create initial BVH
 	buildBVH();
 	//
+
+	int cpt = 0;
+
+	cout << "Primitive Area density = " << primDensity << endl;
 
     // Main loop (repeated while window is not closed and [ESC] is not pressed)
     while( glfwGetWindowParam(GLFW_OPENED) && !glfwGetKey(GLFW_KEY_ESC) )
@@ -656,12 +680,18 @@ int main(int argc, char** argv )
 			processCulling();
 			cullingTime = (glfwGetTime() - timeBuffer1)*1000.0f;
 			cout << cullingTime << endl;
-			cullingOps = (((float)(nFrustum))/(cullingTime/1000.0f))/1000000.0f;
+			cullingOps = (((float)(nAABB*nFrustum))/(cullingTime/1000.0f))/1000000.0f;
 			//
-			//Draw the universe
-			if( isRendering )
-				drawUniverse();
+			drawUniverse();
 		}
+
+		/*if( cpt == 0 )
+			cout << "Prim per Frustum = " << nPrimPerFrustum << endl;
+		if( cpt == 25 )
+			exit(0);
+
+		cpt++;
+		*/
 
         // Draw tweak bars
         TwDraw();

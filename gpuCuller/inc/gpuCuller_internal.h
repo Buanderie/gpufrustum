@@ -85,7 +85,7 @@ extern thrust::device_ptr<lbvhsplit_t> d_SPLITSLIST;
 extern thrust::device_ptr<hnode_t> d_HIERARCHY;
 extern thrust::device_ptr<pyrfrustum_t> d_PYRFRUSTUM;
 extern thrust::device_ptr<pyrcorners_t> d_PYRCORNERS;
-extern thrust::device_ptr<unsigned int> d_OUTPUT;
+extern thrust::device_ptr<char> d_OUTPUT;
 extern unsigned int universeElementCount;
 extern unsigned int bvhDepth;
 extern unsigned int pyrFrustumCount;

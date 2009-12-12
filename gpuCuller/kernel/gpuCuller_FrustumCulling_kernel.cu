@@ -124,7 +124,7 @@ __device__ bvhnode_t fetchPrimFromTex( unsigned int i )
 	return b;
 }
 
-__global__ void ProcessFrustumCulling __traceable__ ( pyrfrustum_t* f, hnode_t* h, bvhnode_t* prims, unsigned int* out, unsigned int frustumCount, unsigned int primCount, unsigned int hierarchySize, unsigned int maxDepth )
+__global__ void ProcessFrustumCulling __traceable__ ( pyrfrustum_t* f, hnode_t* h, bvhnode_t* prims, char* out, unsigned int frustumCount, unsigned int primCount, unsigned int hierarchySize, unsigned int maxDepth )
 {
 	//Frustum array index
 	int idt = blockDim.x * blockIdx.x + threadIdx.x;
@@ -171,7 +171,7 @@ __global__ void ProcessFrustumCulling __traceable__ ( pyrfrustum_t* f, hnode_t* 
 					bvhnode_t b = fetchPrimFromTex(i);
 					if( Intersect( pyr, b.bbox ) )
 					{
-						out[ idt*primCount + b.primIndex ] = 7777777;
+						out[ idt*primCount + b.primIndex ] = 1;
 					}
 				}
 				continue;

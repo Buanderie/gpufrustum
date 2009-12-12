@@ -167,6 +167,7 @@ void LBVH_compute_split_levels()
 	printf("cudaMalloc : SPLITLIST\n");
 #endif
     cudaMalloc((void **) &splitslist_raw_ptr, splitListSize * sizeof(lbvhsplit_t));
+	CUT_CHECK_ERROR("MALLOC SPLIT LIST");
 	d_SPLITSLIST = thrust::device_ptr<lbvhsplit_t>(splitslist_raw_ptr);
 
 	//Retrieve data pointers !
@@ -184,8 +185,10 @@ void LBVH_compute_split_levels()
     dim3  threads( maxBlockDim, 1 );
 
 	//Execute kernel
+	CUT_CHECK_ERROR("ComputeSplitLevel");
 	ComputeSplitLevel<<< grid, threads >>>(	bvhnode_raw, splitslist_raw_ptr, universeElementCount, bvhDepth );
 	cudaThreadSynchronize();
+	CUT_CHECK_ERROR("ComputeSplitLevel");
 }
 
 void LBVH_sort_split_list()
@@ -237,9 +240,10 @@ void LBVH_build_hierarchy1()
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
 
+	CUT_CHECK_ERROR("ComputeHNodeIntervals");
 	ComputeHNodeIntervals<<< grid, threads >>>(	splitslist_raw_ptr, h_raw_ptr, universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
-
+	CUT_CHECK_ERROR("ComputeHNodeIntervals");
 	return;
 }
 
@@ -247,12 +251,13 @@ void LBVH_build_hierarchy2()
 {
 	unsigned int sz = LBVH_compute_hierachy_mem_size();
 
+	thrust::device_vector<unsigned int> vec(sz);
+
 	// strip out the START primIndex from each hnode
-    thrust::device_vector<unsigned int> starts(sz);
-    thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), starts.begin(), hnode_to_startind());
+    thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), vec.begin(), hnode_to_startind());
 	
 	// sort by the start index
-    thrust::sorting::radix_sort_by_key(starts.begin(), starts.end(), d_HIERARCHY);
+    thrust::sorting::radix_sort_by_key(vec.begin(), vec.end(), d_HIERARCHY);
 
 	// Launch the kernel to get the child start pointers... ????
 	cudaDeviceProp deviceProp;
@@ -262,25 +267,25 @@ void LBVH_build_hierarchy2()
 	const unsigned int gridDim = max( 1, (int)ceil((float)sz / (float)maxBlockDim) );
 	dim3  grid( gridDim, 1 );
     dim3  threads( maxBlockDim, 1 );
-
+	CUT_CHECK_ERROR("ComputeChildStart");
 	ComputeChildrenStart<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
+	CUT_CHECK_ERROR("ComputeChildStart");
 	//
 	
 	// strip out the primStop from each hnode
-    thrust::device_vector<unsigned int> stops(sz);
-    thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), stops.begin(), hnode_to_stopind());
+    thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), vec.begin(), hnode_to_stopind());
 	//sort the shit by primStop...
-	thrust::sorting::radix_sort_by_key(stops.begin(), stops.end(), d_HIERARCHY);
-	
+	thrust::sorting::radix_sort_by_key(vec.begin(), vec.end(), d_HIERARCHY);
+	CUT_CHECK_ERROR("ComputeChildStart");
 	ComputeChildrenStop<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), universeElementCount, sz, bvhDepth );
 	cudaThreadSynchronize();
+	CUT_CHECK_ERROR("ComputeChildStart");
 
 	// strip out the ID from each hnode
-    thrust::device_vector<unsigned int> idlol(sz);
-    thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), idlol.begin(), hnode_to_ID());
+    thrust::transform(d_HIERARCHY, d_HIERARCHY + (sz), vec.begin(), hnode_to_ID());
 	//sort the shit by primStop...
-	thrust::sorting::radix_sort_by_key(idlol.begin(), idlol.end(), d_HIERARCHY);
+	thrust::sorting::radix_sort_by_key(vec.begin(), vec.end(), d_HIERARCHY);
 	//
 
 	return;
@@ -305,8 +310,10 @@ void LBVH_BVH_Refit()
 	//For each level of hierarchy
 	for( int i = bvhDepth; i > 0; i-- )
 	{
+		CUT_CHECK_ERROR("ComputeBVHRefit");
 		ComputeBVHRefit<<< grid, threads >>>( thrust::raw_pointer_cast(d_HIERARCHY), thrust::raw_pointer_cast(d_BVHNODE), universeElementCount, sz, i, bvhDepth );
 		cudaThreadSynchronize();
+		CUT_CHECK_ERROR("ComputeBVHRefit");
 	}
 }
 
@@ -326,20 +333,26 @@ void LBVH_Cleanup()
 	//
 
 	// As hierarchy is built, prepare memory for culling result
-	unsigned int * dpolbak = 0;
+	char * dpolbak = 0;
 #ifdef REPORT_MEM_OPS
 	printf("cudaMalloc : OUTPUT\n");
 #endif
-	cudaMalloc((void **) &dpolbak, pyrFrustumCount*universeElementCount*sizeof(unsigned int));
-	d_OUTPUT = thrust::device_ptr<unsigned int>(dpolbak);
-	thrust::fill(d_OUTPUT, d_OUTPUT + pyrFrustumCount*universeElementCount, 0);
-	cudaThreadSynchronize();
-	//
+	CUT_CHECK_ERROR("output malloc de merde");
+	CUDA_SAFE_CALL(cudaMalloc((void **) &dpolbak, pyrFrustumCount*universeElementCount*sizeof(char)));
+	CUT_CHECK_ERROR("output malloc de merde");
+	d_OUTPUT = thrust::device_ptr<char>(dpolbak);
+	CUDA_SAFE_CALL( cudaMemset( dpolbak, 0, pyrFrustumCount*universeElementCount*sizeof(char)));
+	CUT_CHECK_ERROR("output memset de merde");
+	//d_OUTPUT = thrust::device_malloc<char>(pyrFrustumCount*universeElementCount);
+	//thrust::uninitialized_fill(d_OUTPUT, d_OUTPUT + pyrFrustumCount*universeElementCount, 0);
 }
 
 void LBVH_Build()
 {
 
+	#ifdef REPORT_MEM_OPS
+	printf("assign morton code\n");
+#endif
 	//First step: Assign Morton Codes to BVH Nodes
 	LBVH_assign_morton_code();
 	//
@@ -347,28 +360,52 @@ void LBVH_Build()
 	//Second step: Sort the BVH Nodes according to their morton codes...
 	//Use the thrust::sort function...
 	//
+	#ifdef REPORT_MEM_OPS
+	printf("sort by code\n");
+#endif
 	LBVH_sort_by_code();
 
+	#ifdef REPORT_MEM_OPS
+	printf("compute split levels\n");
+#endif
 	//Prepare and fill the splits list
 	LBVH_compute_split_levels();
 
 
+	#ifdef REPORT_MEM_OPS
+	printf("sort split lists\n");
+#endif
 	//Sort the splits list by level of split
 	LBVH_sort_split_list();
 
+	#ifdef REPORT_MEM_OPS
+	printf("hierarchy1 : OUTPUT\n");
+#endif
 	//First phase of hierarchy construction : Compute hierarchy nodes Primitive Intervals
 	LBVH_build_hierarchy1();
 
+	#ifdef REPORT_MEM_OPS
+	printf("hierarchy2\n");
+#endif
 	//Second phase of hierarchy construction : Building children pointers
 	LBVH_build_hierarchy2();
 
+	#ifdef REPORT_MEM_OPS
+	printf("refit\n");
+#endif
 	//Last phase : BVH Refit
 	LBVH_BVH_Refit();
 
 	PrepareTraversalTextures();
 	
+	#ifdef REPORT_MEM_OPS
+	printf("check data\n");
+#endif
 	//LBVH_CheckNodeData();
 	//TexTest();
 
+	#ifdef REPORT_MEM_OPS
+	printf("cleanup\n");
+#endif
 	LBVH_Cleanup();
 }

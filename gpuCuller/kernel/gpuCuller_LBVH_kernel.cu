@@ -109,17 +109,17 @@ __global__ void ComputeSplitLevel( bvhnode_t* bvhPtr, lbvhsplit_t* split, unsign
 	//
 //
 
-	for( int k = maxDepth; k>=0; --k )
+	for( int k = maxDepth; k>0; --k )
 	{
 		//Extract the k-th digit of the two guys
 		a = extractDigit( code_a, k );
 		b = extractDigit( code_b, k );
 
-		const unsigned splitInd = (maxDepth-k-1)*elementCount + i;
+		const unsigned splitInd = (maxDepth-k)*elementCount + i;
 		//Compare the two digits
 		if( a != b )
 		{
-			split[ splitInd ].level = (maxDepth-k);
+			split[ splitInd ].level = (maxDepth-k+1);
 			split[ splitInd ].primIndex = i;
 		}
 		else
@@ -142,6 +142,8 @@ __global__ void ComputeHNodeIntervals( lbvhsplit_t* split, hnode_t* hierarchy, u
 
 	//Assign unique ID to every hierarchy node
 	hierarchy[ i ].ID = i;
+
+	hierarchy[ i ].visible = false;
 
 	//If the split is a valid one...
 	if( split[i].level <= maxDepth )
@@ -205,7 +207,7 @@ __global__ void ComputeChildrenStart( hnode_t* h, unsigned int elementCount, uns
 		return;
 	}
 
-	for( int k = i+1; i < hierarchySize; ++k )
+	for( int k = i+1; k < hierarchySize-1; ++k )
 	{
 		if( h[ k ].splitLevel == h[ i ].splitLevel + 1 )
 		{	

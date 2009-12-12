@@ -13,8 +13,8 @@ void __stdcall gculInitialize( int argc, char** argv )
 	int major = THRUST_MAJOR_VERSION;
     int minor = THRUST_MINOR_VERSION;
     int subminor = THRUST_SUBMINOR_VERSION;
-	//cout << "Initializing gpuCuller..." << endl;
-	//std::cout << "Using Thrust v" << major << "." << minor << "." << subminor << std::endl;
+	cout << "Initializing gpuCuller..." << endl;
+	std::cout << "Using Thrust v" << major << "." << minor << "." << subminor << std::endl;
 
 	printf("Initializing CUDA...\n");
 	// Initializes CUDA device
@@ -22,7 +22,7 @@ void __stdcall gculInitialize( int argc, char** argv )
 		cutilDeviceInit(argc, argv);
 	else
 		cudaSetDevice( cutGetMaxGflopsDeviceId() );
-	//printf("CUDA Initialized, using device #%i\n", cutGetMaxGflopsDeviceId());
+	printf("CUDA Initialized, using device #%i\n", cutGetMaxGflopsDeviceId());
 }
 
 void __stdcall gculLoadAABB( unsigned int N, const void* ptr )
@@ -102,8 +102,10 @@ void __stdcall gculFreeHierarchy()
 	printf("cudaFREE : OUTPUT\n");
 #endif
 	thrust::device_free(d_OUTPUT);
-	//PROFIT
 
+#ifdef REPORT_MEM_OPS
+	printf("cudaFREE : Texture Hierarchy\n");
+#endif
 	thrust::device_free( trav_hnodeSplitLevel );
 	thrust::device_free( trav_hnodePrimStart );
 	thrust::device_free( trav_hnodePrimStop );
@@ -171,14 +173,13 @@ void __stdcall gculLoadFrustumCorners( unsigned int N, const void* ptr )
 
 void __stdcall gculProcessCulling()
 {
-	//TexTest();
 	FrustumCulling();
 	return;
 }
 
 void __stdcall gculGetResults(void* data)
 {
-	cudaMemcpy(data, thrust::raw_pointer_cast(d_OUTPUT), sizeof(unsigned int)*universeElementCount*pyrFrustumCount, cudaMemcpyDeviceToHost);
+	cudaMemcpy(data, thrust::raw_pointer_cast(d_OUTPUT), sizeof(char)*universeElementCount*pyrFrustumCount, cudaMemcpyDeviceToHost);
 }
 
 void __stdcall gculSaveHierarchyGraph(char* outputFile)
