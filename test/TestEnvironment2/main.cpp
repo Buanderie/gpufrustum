@@ -168,13 +168,13 @@ void setDefaultParameters(char** arg)
 	//
 	cullingResult = 0;
 	//
-	bvhDepth = 5;
+	bvhDepth = 3;
 	dynamicMode = false;
 	isCulling = true;
 	isRendering = false;
 	//
-	aabbDistribution = MIX;
-	nAABB = 2500;
+	aabbDistribution = UNIFORM;
+	nAABB = 500;
 	aabbMinWidth = 1.0f;
 	aabbMaxWidth = 7.0f;
 	aabbMinHeight = 1.0f;
@@ -371,8 +371,8 @@ void drawUniverse()
 				nbCulled++;
 			}
 		}
-		//if( isRendering )
-		//frustumList[j].draw();
+		if( isRendering )
+		frustumList[j].draw();
 	}
 
 	if( isRendering )

@@ -90,6 +90,9 @@ __global__ void ComputeSplitLevel( bvhnode_t* bvhPtr, lbvhsplit_t* split, unsign
 {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 
+	if( i > elementCount )
+		return;
+
 	unsigned int code_a;
 	unsigned int code_b;
 	unsigned int a;
@@ -109,17 +112,17 @@ __global__ void ComputeSplitLevel( bvhnode_t* bvhPtr, lbvhsplit_t* split, unsign
 	//
 //
 
-	for( int k = maxDepth; k>0; --k )
+	for( int k = maxDepth-1; k>=0; --k )
 	{
 		//Extract the k-th digit of the two guys
 		a = extractDigit( code_a, k );
 		b = extractDigit( code_b, k );
 
-		const unsigned splitInd = (maxDepth-k)*elementCount + i;
+		const unsigned splitInd = (maxDepth-k-1)*elementCount + i;
 		//Compare the two digits
 		if( a != b )
 		{
-			split[ splitInd ].level = (maxDepth-k+1);
+			split[ splitInd ].level = (maxDepth-k);
 			split[ splitInd ].primIndex = i;
 		}
 		else

@@ -1,6 +1,8 @@
 #ifndef __GPUCULLER_FRUSTUMCULLING_KERNEL_H__
 #define __GPUCULLER_FRUSTUMCULLING_KERNEL_H__
 
+#define STACK_DEPTH 50
+
 #include <cutil.h>
 #include <cutil_inline.h>
 
@@ -124,7 +126,7 @@ __device__ bvhnode_t fetchPrimFromTex( unsigned int i )
 	return b;
 }
 
-__global__ void ProcessFrustumCulling __traceable__ ( pyrfrustum_t* f, hnode_t* h, bvhnode_t* prims, char* out, unsigned int frustumCount, unsigned int primCount, unsigned int hierarchySize, unsigned int maxDepth )
+__global__ void ProcessFrustumCulling ( pyrfrustum_t* f, hnode_t* h, bvhnode_t* prims, char* out, unsigned int frustumCount, unsigned int primCount, unsigned int hierarchySize, unsigned int maxDepth )
 {
 	//Frustum array index
 	int idt = blockDim.x * blockIdx.x + threadIdx.x;
@@ -133,8 +135,8 @@ __global__ void ProcessFrustumCulling __traceable__ ( pyrfrustum_t* f, hnode_t* 
 	if( idt > frustumCount )
 		return;
 
-	//stack ^^
-	unsigned int stack[200];
+	//stack ^^ (on local memory)
+	unsigned int stack[STACK_DEPTH];
 	int stack_top = -1;
 	//
 
@@ -145,6 +147,8 @@ __global__ void ProcessFrustumCulling __traceable__ ( pyrfrustum_t* f, hnode_t* 
 	for( int i = 0; i < 4; ++i )
 	{
 		hnode_t n = fetchFromTex(i);
+		if( n.splitLevel != 1 )
+			break;
 		stack_top++;
 		stack[ stack_top ] = n.ID;
 	}
@@ -152,7 +156,7 @@ __global__ void ProcessFrustumCulling __traceable__ ( pyrfrustum_t* f, hnode_t* 
 	//Parse the tree
 	while( true )
 	{
-		if( stack_top < 0 || stack_top == 200 )
+		if( stack_top < 0 || stack_top == STACK_DEPTH )
 			break;
 
 		//extract the top node
